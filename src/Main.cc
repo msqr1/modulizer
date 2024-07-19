@@ -1,5 +1,6 @@
 #include "Argparse.hpp"
 #include "HeaderProcessor.hpp"
+#include <fstream>
 namespace ap = argparse;
 namespace fs = std::filesystem;
 
@@ -38,7 +39,7 @@ int main(int argc, char *argv[]) {
   }
   fs::path path;
   std::fstream file;
-  HeaderProcessor hdrP;
+  HeaderProcessor hdrP{verbose};
   for(const auto& entry : fs::directory_iterator(inDir)) {
     path = entry.path();
     file.open(path);
@@ -48,12 +49,12 @@ int main(int argc, char *argv[]) {
     }
     if(path.extension() == hdrExt) {
       hdrP << file;
-      fs::resize_file(path, 0);
+      //fs::resize_file(path, 0);
       hdrP
-      .setModuleName(path)
-      .handleInternalLinkages()
-      .replaceIncludes();
-      hdrP >> file;
+      .include2Import()
+      .handleAnonymousNS()
+      .eraseEmptyExport();
+     hdrP >> file;
     }
     else if(path.extension() == srcExt) {
       
