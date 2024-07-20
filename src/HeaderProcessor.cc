@@ -1,8 +1,8 @@
 
 #include "HeaderProcessor.hpp"
-#include <regex>
+#include "Ctre.hpp"
 #include <iostream>
-#include <algorithm>
+#include <cstring>
 #include <fstream>
 namespace fs = std::filesystem;
 void HeaderProcessor::operator<<(std::fstream &in) {
@@ -18,60 +18,54 @@ HeaderProcessor& HeaderProcessor::setModuleName(const fs::path& name) {
   return *this;
 }
 HeaderProcessor &HeaderProcessor::include2Import() {
-  static const std::regex expr{"#include +\"(.*)(?:\\..*)\""};
-  std::string replacement{"import "};
-  std::sregex_iterator it{text.begin(), text.end(), expr};
-  long count{std::distance(it, std::sregex_iterator())};
-  while(count --> 0) {
-    replacement += (*it)[1];
-    replacement += ";";
-    text.replace(it->position(), it->length(), replacement);
-    replacement.resize(7);
-    ++it;
+  // Since the equivalent import is always shorter than the include, we replace and do erase-remove idiom
+  auto res{ctre::multiline_search_all<"#include +\"(.*)(?:\\..*)\"">(text)};
+  size_t leftover{};
+  size_t captureSize{};
+  char* dst{};
+  auto it{res.begin()};
+  auto next{it};
+  auto end{res.end()};
+  while(it != end) {
+    next = std::next(it);
+    dst = &*(*it).begin() - leftover;
+    captureSize = (*it).get<1>().size();
+    std::memcpy(dst, "import ", 7);
+    std::memcpy(dst + 7, (*it).get<1>().data_unsafe(), captureSize);
+    dst[7 + captureSize] = ';';
+    leftover += (*it).size() - captureSize - 8;
+    std::copy((*it).end(), next != end ? (*next).begin() : text.end(), (*it++).end() - leftover);
   }
+  text.resize(text.size() - leftover);
   return *this;
 }
 HeaderProcessor& HeaderProcessor::handleAnonymousNS() {
-  static const std::regex expr{"namespace\\s*\\{"};
-  std::sregex_iterator it{text.begin(), text.end(), expr};
-  long count{std::distance(it, std::sregex_iterator())};
-  while(count --> 0) {
-    int braceLvl{1};
-    long current{it->position() + it->length()};
-    while(braceLvl > 0) {
-      switch(text[current]) {
-        case '{':
-          braceLvl++;
-          break;
-        case '}':
-          braceLvl--;
-      }
-      current++;
-    }
-    text.insert(current, "\nexport\n {").insert(it->position(), "}\n");
+  for(const auto& match : ctre::search_all<"(?:inline\\s+)?namespace\\s*\\{">(text)) {
+  
   }
   return *this;
 }
-HeaderProcessor &HeaderProcessor::handleInternalLinkages() {
+HeaderProcessor& HeaderProcessor::handleStaticEntity() {
+  return *this;
+}
+HeaderProcessor& HeaderProcessor::handleAnonymousUnion() {
   return *this;
 }
 HeaderProcessor &HeaderProcessor::eraseEmptyExport() {
-  static const std::regex expr{"export\\s*\\{\\s*\\}"};
-  std::string::iterator begin{text.begin()};
-  std::string::iterator end{text.end()};
-  std::sregex_iterator it{begin, end, expr};
-  long count{std::distance(it, std::sregex_iterator())};
-  long totalLen = 0;
-  while(count --> 0) {
-    std::copy(begin + it->position() + it->length(), 
-      count == 0 ? begin + std::next(it)->position() : end, 
-    begin + it->position() - totalLen);
-    totalLen += it++->length();
+  // Erase-remove idiom with regex
+  auto res{ctre::search_all<"export\\s*\\{\\s*\\}">(text)};
+  size_t totalLen{};
+  auto it{res.begin()};
+  auto next{it};
+  auto end{res.end()};
+  while(it != end) {
+    next = std::next(it);
+    std::copy((*it).end(), next != end ? (*next).begin() : text.end(), (*it).begin() - totalLen);
+    totalLen += (*it++).size();
   }
-  text.erase(end - totalLen, end);
+  text.resize(text.size() - totalLen);
   return *this;
 }
 void HeaderProcessor::operator>>(std::fstream &out) {
-  std::cout << "export module " << moduleName 
-      << ";\n" << text << "\n";
+  std::cout << text << "\n";
 }

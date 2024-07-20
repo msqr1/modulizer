@@ -3,10 +3,10 @@
 #include <fstream>
 namespace ap = argparse;
 namespace fs = std::filesystem;
-
 int main(int argc, char *argv[]) {
   bool merge{};
   bool verbose{};
+  int indent{};
   std::string inDir;
   std::string hdrExt;
   std::string srcExt;
@@ -20,14 +20,18 @@ int main(int argc, char *argv[]) {
     .help("Actiate verbose output")
     .store_into(verbose);
   program.add_argument("-m", "--merge")
-    .help("Merge header and corresponding source into one file")
+    .help("Merge header and corresponding source into one header")
     .store_into(merge);
+  program.add_argument("-i", "--indent")
+    .help("Set indentation size for export blocks (and definitions later)")
+    .scan<'i', int>()
+    .store_into(indent);
   program.add_argument("--header-extension")
-    .help("Specify header file extension")
+    .help("Set header header extension")
     .default_value(".hpp")
     .store_into(hdrExt);
   program.add_argument("--source-extension")
-    .help("Specify source file extension")
+    .help("Set source header extension")
     .default_value(".cpp")
     .store_into(srcExt);
   try {
@@ -38,27 +42,23 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   fs::path path;
-  std::fstream file;
-  HeaderProcessor hdrP{verbose};
+  fs::path srcPath;
+  std::fstream header;
+  HeaderProcessor hdrP{verbose, indent};
   for(const auto& entry : fs::directory_iterator(inDir)) {
     path = entry.path();
-    file.open(path);
-    if(!file.is_open()) {
+    header.open(path);
+    if(!header.is_open()) {
       std::cerr << "Unable to open " << path << "\n";
       return 1;
     }
     if(path.extension() == hdrExt) {
-      hdrP << file;
-      //fs::resize_file(path, 0);
+      hdrP << header;
+      //fs::resize_header(path, 0);
       hdrP
-      .include2Import()
-      .handleAnonymousNS()
-      .eraseEmptyExport();
-     hdrP >> file;
+      .include2Import();
+      hdrP >> header;
     }
-    else if(path.extension() == srcExt) {
-      
-    }
-    file.close();
+    header.close();
   }
 }
