@@ -218,7 +218,7 @@ prospectively choose to deem waived or otherwise exclude such Section(s) of
 the License, but only in their entirety and only with respect to the Combined
 Software.
 */
-// Commit acb2f4d
+// Commit 129d535
 #ifndef CTRE_V2__CTRE__HPP
 #define CTRE_V2__CTRE__HPP
 
@@ -5339,8 +5339,8 @@ template <typename Range, typename RE> struct multi_subject_range {
 	struct iterator {
 		using value_type = decltype(RE::exec(std::declval<typename std::iterator_traits<first_type>::value_type>()));
 		using iterator_category = std::forward_iterator_tag;
-		using pointer = void;
 		using reference = const value_type &;
+		using pointer = const value_type *;
 		using difference_type = int;
 		
 		first_type first{};
@@ -5358,8 +5358,12 @@ template <typename Range, typename RE> struct multi_subject_range {
 			return {};
 		}
 		
-		constexpr CTRE_FORCE_INLINE const value_type & operator*() const noexcept {
+		constexpr CTRE_FORCE_INLINE reference operator*() const noexcept {
 			return current_result;
+		}
+		
+		constexpr CTRE_FORCE_INLINE pointer operator->() const noexcept {
+			return &current_result;
 		}
 		
 		constexpr CTRE_FORCE_INLINE iterator & operator++() noexcept {
@@ -5408,7 +5412,7 @@ template <typename Range, typename RE> struct multi_subject_range {
 	Range range{};
 	
 	constexpr CTRE_FORCE_INLINE multi_subject_range() noexcept = default;
-	constexpr CTRE_FORCE_INLINE multi_subject_range(Range r) noexcept:  range{r} { }
+	constexpr CTRE_FORCE_INLINE multi_subject_range(Range r) noexcept: range{r} { }
 	
 	constexpr CTRE_FORCE_INLINE auto begin() const noexcept {
 		return iterator{range.begin(), range.end()};

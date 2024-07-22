@@ -3,6 +3,7 @@
 #include "Ctre.hpp"
 #include <iostream>
 #include <cstring>
+#include <algorithm>
 #include <fstream>
 namespace fs = std::filesystem;
 void HeaderProcessor::operator<<(std::fstream &in) {
@@ -19,24 +20,20 @@ HeaderProcessor& HeaderProcessor::setModuleName(const fs::path& name) {
 }
 HeaderProcessor &HeaderProcessor::include2Import() {
   // Since the equivalent import is always shorter than the include, we replace and do erase-remove idiom
-  auto res{ctre::multiline_search_all<"#include +\"(.*)(?:\\..*)\"">(text)};
-  size_t leftover{};
-  size_t captureSize{};
-  char* dst{};
-  auto it{res.begin()};
-  auto next{it};
-  auto end{res.end()};
-  while(it != end) {
-    next = std::next(it);
-    dst = &*(*it).begin() - leftover;
-    captureSize = (*it).get<1>().size();
-    std::memcpy(dst, "import ", 7);
-    std::memcpy(dst + 7, (*it).get<1>().data_unsafe(), captureSize);
-    dst[7 + captureSize] = ';';
-    leftover += (*it).size() - captureSize - 8;
-    std::copy((*it).end(), next != end ? (*next).begin() : text.end(), (*it++).end() - leftover);
+  auto it{text.begin()};
+  size_t include{};
+  for(const auto& kept : ctre::multiline_split<"#include +\"(.+)\"">(text)) {
+    it = std::ranges::copy(kept, it).out;
+    include = kept.get<1>().size();
+    if(include > 0) {
+      std::memcpy(&*it, "import ", 7);
+      it += 7;
+      std::memcpy(&*it, kept.get<1>().data_unsafe(), include);
+      it += include;
+      *it++ = ';';
+    }
   }
-  text.resize(text.size() - leftover);
+  text.erase(it, text.end());
   return *this;
 }
 HeaderProcessor& HeaderProcessor::handleAnonymousNS() {
@@ -53,17 +50,11 @@ HeaderProcessor& HeaderProcessor::handleAnonymousUnion() {
 }
 HeaderProcessor &HeaderProcessor::eraseEmptyExport() {
   // Erase-remove idiom with regex
-  auto res{ctre::search_all<"export\\s*\\{\\s*\\}">(text)};
-  size_t totalLen{};
-  auto it{res.begin()};
-  auto next{it};
-  auto end{res.end()};
-  while(it != end) {
-    next = std::next(it);
-    std::copy((*it).end(), next != end ? (*next).begin() : text.end(), (*it).begin() - totalLen);
-    totalLen += (*it++).size();
+  auto it{text.begin()};
+  for (const auto& kept : ctre::split<"export\\s*\\{\\s*\\}">(text)) {
+    if(kept.size() > 0) it = std::ranges::copy(kept, it).out;
   }
-  text.resize(text.size() - totalLen);
+  text.erase(it, text.end());
   return *this;
 }
 void HeaderProcessor::operator>>(std::fstream &out) {
