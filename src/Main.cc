@@ -56,8 +56,8 @@ int main(int argc, char *argv[]) {
       hdrP << header;
       //fs::resize_header(path, 0);
       hdrP
-      .include2Import();
-      hdrP >> header;
+      .handleUnnamedNS();
+      //hdrP >> header;
     }
     header.close();
   }
