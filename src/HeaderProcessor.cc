@@ -1,27 +1,64 @@
-
 #include "HeaderProcessor.hpp"
 #include "Ctre.hpp"
-#include <iostream>
 #include <cstring>
-#include <vector>
+#include <iostream>
 #include <stack>
+#include <vector>
 #include <algorithm>
 #include <fstream>
 namespace fs = std::filesystem;
-NS::NS(bool inlined, const std::reverse_iterator<std::string::iterator>& begin, const std::reverse_iterator<std::string::iterator>& end) : inlined{inlined}, name{end.base(), begin.base()} {}
-void HeaderProcessor::operator<<(std::fstream &in) {
-  // Read header into string
-  in.seekg(0, std::ios::end);
-  long size {in.tellg()};
-  in.seekg(0);
-  if(size > text.capacity()) {
-    text.clear();
-    text.resize(size);
-  }
-  in.read(&text[0], size);
+NS::NS(size_t open, size_t close) : open{open}, close{close} {}
+NS::NS() : open{0}, close{0} {}
+HeaderProcessor& HeaderProcessor::read(std::fstream& in, const fs::path& p) {
+  size_t size {fs::file_size(p)};
+  text.clear();
+  text.resize(size);
+  in.read(text.data(), size);
+  return *this;
 }
-HeaderProcessor& HeaderProcessor::setModuleName(const fs::path& name) {
-  moduleName = name.stem();
+HeaderProcessor& HeaderProcessor::exportNoNS() {
+  static constexpr std::string_view OPEN_EXPORT{"\nexport {"};
+  static constexpr std::string_view CLOSE_EXPORT{"}\n"};
+  static constexpr size_t EXPORT_SIZE{OPEN_EXPORT.length() + CLOSE_EXPORT.length()};
+
+  std::stack<NS, std::vector<NS>> stack;
+  std::string::iterator it;
+  std::string::iterator begin;
+  int i{0};
+  NS self;
+  NS* top;
+  bool unnamed{};
+  auto search{ctre::search<R"((?:inline\s+)?namespace(.*?)\{)">};
+  stack.emplace(0, text.size());
+  while(!stack.empty()) {
+    begin = text.begin();
+    top = &stack.top();
+    auto NS = search(begin + top->open, begin + top->close);
+    if(NS.data() == nullptr) {
+      std::cout << std::string_view(begin + top->open, begin + top->close) << "\n";
+      stack.pop();
+      top = &stack.top();
+      continue;
+    }
+    int nest{1};
+    it = NS.end();
+    self.open = it - begin;
+    while(nest) {
+      switch(*++it) {
+        case '{':
+          nest++;
+          break;
+        case '}':
+          nest--;
+      }
+    }
+    self.close = it - begin;
+    unnamed = NS.get<1>().to_view().find_first_not_of(" \n\t\v\f\r") == std::string::npos;
+    std::cout << std::string_view(begin + top->open, NS.begin()) << "\n";
+    top->open = self.close + 1;
+    if(!unnamed) stack.emplace(self);
+  }
+  std::cout << text;
   return *this;
 }
 HeaderProcessor &HeaderProcessor::include2Import() {
@@ -42,62 +79,6 @@ HeaderProcessor &HeaderProcessor::include2Import() {
   text.erase(it, text.end());
   return *this;
 }
-HeaderProcessor& HeaderProcessor::handleUnnamedNS() {
-  // Scan for unnamed namespace, see what namespace(s) it is under, and recreate the same namespace hierarchy outside the export block
-  std::stack<NS> NSInsideOut;
-  size_t start{};
-  auto unnamedNS{ctre::multiline_search<"(inline\\s+)?namespace\\s*\\{">(text)};
-  while(unnamedNS.data() != nullptr) {
-    int nest{};
-    int maxNest{};
-    auto it{unnamedNS.begin()};
-    while(it != text.begin()) {
-      switch(*--it) {
-        case '{':
-          nest++;
-          break;
-        case '}':
-          nest--;
-      }
-      if(nest > maxNest) {
-        // Since we're scanning in reverse, the regex also need to be matching backward.Equivalent forward: (?:(inline)\s+)?namespace\s++(.+?)\s*{
-        auto NS{ctre::multiline_search<"\\s*+(.+)\\s+ecapseman(?:\\s+(enilni))?">(std::make_reverse_iterator(it), text.rend())};
-        NSInsideOut.emplace(NS.get<2>().size() > 0, NS.get<1>().begin(), NS.get<1>().end());
-        maxNest = nest;
-      }
-    }
-    // No nesting, just repair export around the unnamed NS
-    if(NSInsideOut.empty()) {
-      // Find matching braces
-      int nestLvl{1};
-      it = unnamedNS.end();
-      while(nestLvl > 0) {
-        switch(*it++) {
-          case '{':
-            nestLvl++;
-            break;
-          case '}':
-            nestLvl--;
-        }
-      }
-      start = it - text.begin();
-      text
-      .insert(unnamedNS.begin() - text.begin(), "}\n")
-      .insert(start, "\nexport {\n");
-      start += 12;
-      std::cout << text;
-    } 
-    else {
-      while(!NSInsideOut.empty()) {
-        std::cout << NSInsideOut.top().name << " " << NSInsideOut.top().inlined << "\n";
-        NSInsideOut.pop();
-      }
-    }
-    break;
-    unnamedNS = ctre::multiline_search<"(inline\\s+)?namespace\\s*\\{">(text.begin() + start, text.end());
-  }
-  return *this;
-}
 HeaderProcessor& HeaderProcessor::handleStaticEntity() {
   return *this;
 }
@@ -113,6 +94,8 @@ HeaderProcessor &HeaderProcessor::eraseEmptyExport() {
   text.erase(it, text.end());
   return *this;
 }
-void HeaderProcessor::operator>>(std::fstream &out) {
+HeaderProcessor &HeaderProcessor::write(std::fstream& out, const fs::path& p) {
+  //fs::resize_file(p, 0);
   std::cout << text << "\n";
+  return *this;
 }

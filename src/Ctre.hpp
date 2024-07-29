@@ -218,7 +218,7 @@ prospectively choose to deem waived or otherwise exclude such Section(s) of
 the License, but only in their entirety and only with respect to the Combined
 Software.
 */
-// Commit 129d535
+// 
 #ifndef CTRE_V2__CTRE__HPP
 #define CTRE_V2__CTRE__HPP
 
@@ -233,14 +233,6 @@ Software.
 
 #ifndef CTLL__FIXED_STRING__GPP
 #define CTLL__FIXED_STRING__GPP
-
-#ifndef CTLL_IN_A_MODULE
-#include <utility>
-#include <cstddef>
-#include <string_view>
-#include <array>
-#include <cstdint>
-#endif
 
 namespace ctll {
 

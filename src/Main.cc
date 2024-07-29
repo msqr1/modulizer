@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   std::string srcExt;
 
   ap::ArgumentParser program("modulizer");
-  program.add_description("C++20 modularizer tool, convert #include code into using C++20 modules");
+  program.add_description("C++20 modularizer in C++20");
   program.add_argument("inDir")
     .help("Specify input directory")
     .store_into(inDir);
@@ -27,11 +27,11 @@ int main(int argc, char *argv[]) {
     .scan<'i', int>()
     .store_into(indent);
   program.add_argument("--header-extension")
-    .help("Set header header extension")
+    .help("Set header extension")
     .default_value(".hpp")
     .store_into(hdrExt);
   program.add_argument("--source-extension")
-    .help("Set source header extension")
+    .help("Set source extension")
     .default_value(".cpp")
     .store_into(srcExt);
   try {
@@ -53,11 +53,11 @@ int main(int argc, char *argv[]) {
       return 1;
     }
     if(path.extension() == hdrExt) {
-      hdrP << header;
-      //fs::resize_header(path, 0);
-      hdrP
-      .handleUnnamedNS();
-      //hdrP >> header;
+      hdrP.
+      read(header, path)
+      .exportNoNS()
+      //.write(header, path)
+      ;
     }
     header.close();
   }
