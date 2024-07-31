@@ -56,6 +56,8 @@ int main(int argc, char *argv[]) {
       hdrP.
       read(header, path)
       .exportNoNS()
+      .eraseEmptyExport()
+      .write(header, path)
       //.write(header, path)
       ;
     }

@@ -2,7 +2,6 @@
 #include "Ctre.hpp"
 #include <cstring>
 #include <iostream>
-#include <stack>
 #include <vector>
 #include <algorithm>
 #include <fstream>
@@ -17,27 +16,29 @@ HeaderProcessor& HeaderProcessor::read(std::fstream& in, const fs::path& p) {
   return *this;
 }
 HeaderProcessor& HeaderProcessor::exportNoNS() {
-  static constexpr std::string_view OPEN_EXPORT{"\nexport {"};
-  static constexpr std::string_view CLOSE_EXPORT{"}\n"};
-  static constexpr size_t EXPORT_SIZE{OPEN_EXPORT.length() + CLOSE_EXPORT.length()};
-
-  std::stack<NS, std::vector<NS>> stack;
+  static constexpr std::string_view OPEN_EXPORT{"export {"};
+  static constexpr std::string_view CLOSE_EXPORT{"}"};
+  static constexpr size_t EXPORT_LEN{OPEN_EXPORT.size() + CLOSE_EXPORT.size()};
+  // Use as a stack but still need to iterate over
+  std::vector<NS> stackLike;
   std::string::iterator it;
   std::string::iterator begin;
-  int i{0};
   NS self;
-  NS* top;
+  NS* parent;
   bool unnamed{};
   auto search{ctre::search<R"((?:inline\s+)?namespace(.*?)\{)">};
-  stack.emplace(0, text.size());
-  while(!stack.empty()) {
+  stackLike.emplace_back(0, text.size());
+  while(!stackLike.empty()) {
     begin = text.begin();
-    top = &stack.top();
-    auto NS = search(begin + top->open, begin + top->close);
+    parent = &stackLike.back();
+    auto NS = search(begin + parent->open, begin + parent->close);
     if(NS.data() == nullptr) {
-      std::cout << std::string_view(begin + top->open, begin + top->close) << "\n";
-      stack.pop();
-      top = &stack.top();
+      text.insert(parent->close, CLOSE_EXPORT).insert(parent->open, OPEN_EXPORT);
+      stackLike.pop_back();
+      for(auto& [open, close] : stackLike) {
+        open += EXPORT_LEN;
+        close += EXPORT_LEN;
+      }
       continue;
     }
     int nest{1};
@@ -54,11 +55,16 @@ HeaderProcessor& HeaderProcessor::exportNoNS() {
     }
     self.close = it - begin;
     unnamed = NS.get<1>().to_view().find_first_not_of(" \n\t\v\f\r") == std::string::npos;
-    std::cout << std::string_view(begin + top->open, NS.begin()) << "\n";
-    top->open = self.close + 1;
-    if(!unnamed) stack.emplace(self);
+    text.insert(NS.begin() - begin, CLOSE_EXPORT).insert(parent->open, OPEN_EXPORT);
+    self.open += EXPORT_LEN;
+    self.close += EXPORT_LEN;
+    for(auto& [open, close] : stackLike) {
+      open += EXPORT_LEN;
+      close += EXPORT_LEN;
+    }
+    parent->open = self.close + 1;
+    if(!unnamed) stackLike.emplace_back(self);
   }
-  std::cout << text;
   return *this;
 }
 HeaderProcessor &HeaderProcessor::include2Import() {
@@ -88,7 +94,7 @@ HeaderProcessor& HeaderProcessor::handleAnonymousUnion() {
 HeaderProcessor &HeaderProcessor::eraseEmptyExport() {
   // Erase-remove idiom with regex
   auto it{text.begin()};
-  for (const auto& kept : ctre::split<"export\\s*\\{\\s*\\}">(text)) {
+  for (const auto& kept : ctre::split<R"(export\s*\{\s*\})">(text)) {
     if(kept.size() > 0) it = std::ranges::copy(kept, it).out;
   }
   text.erase(it, text.end());

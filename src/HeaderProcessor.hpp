@@ -17,7 +17,6 @@ public:
   HeaderProcessor& exportNoNS();
   // FIXME: Replace illegal export characters like hyphen
   HeaderProcessor& include2Import();
-  // NOTE: Anonymous unions can be in namespaces but can't be exported (the bad part)
   HeaderProcessor& handleAnonymousUnion();
   HeaderProcessor& handleStaticEntity();
   HeaderProcessor& eraseEmptyExport();
