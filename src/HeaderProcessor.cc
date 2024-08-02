@@ -9,13 +9,34 @@ namespace fs = std::filesystem;
 NS::NS(size_t open, size_t close) : open{open}, close{close} {}
 NS::NS() : open{0}, close{0} {}
 HeaderProcessor& HeaderProcessor::read(std::fstream& in, const fs::path& p) {
-  size_t size {fs::file_size(p)};
+  size_t size{fs::file_size(p)};
   text.clear();
-  text.resize(size);
+  // Resize but don't initialize
+  text.resize_and_overwrite(size, [](const char*, size_t size) {
+    return size;
+  });
   in.read(text.data(), size);
   return *this;
 }
-HeaderProcessor& HeaderProcessor::exportNoNS() {
+HeaderProcessor &HeaderProcessor::include2Import() {
+  // Since the equivalent import is always shorter than the include, we replace and do erase-remove idiom
+  auto it{text.begin()};
+  size_t include{};
+  for(const auto& kept : ctre::multiline_split<"#include +\"(.+)\"">(text)) {
+    it = std::ranges::copy(kept, it).out;
+    include = kept.get<1>().size();
+    if(include > 0) {
+      std::memcpy(&*it, "import ", 7);
+      it += 7;
+      std::memcpy(&*it, kept.get<1>().data_unsafe(), include);
+      it += include;
+      *it++ = ';';
+    }
+  }
+  text.erase(it, text.end());
+  return *this;
+}
+HeaderProcessor& HeaderProcessor::exportNoUnnamedNS() {
   static constexpr std::string_view OPEN_EXPORT{"export {"};
   static constexpr std::string_view CLOSE_EXPORT{"}"};
   static constexpr size_t EXPORT_LEN{OPEN_EXPORT.size() + CLOSE_EXPORT.size()};
@@ -67,28 +88,11 @@ HeaderProcessor& HeaderProcessor::exportNoNS() {
   }
   return *this;
 }
-HeaderProcessor &HeaderProcessor::include2Import() {
-  // Since the equivalent import is always shorter than the include, we replace and do erase-remove idiom
-  auto it{text.begin()};
-  size_t include{};
-  for(const auto& kept : ctre::multiline_split<"#include +\"(.+)\"">(text)) {
-    it = std::ranges::copy(kept, it).out;
-    include = kept.get<1>().size();
-    if(include > 0) {
-      std::memcpy(&*it, "import ", 7);
-      it += 7;
-      std::memcpy(&*it, kept.get<1>().data_unsafe(), include);
-      it += include;
-      *it++ = ';';
-    }
-  }
-  text.erase(it, text.end());
-  return *this;
-}
 HeaderProcessor& HeaderProcessor::handleStaticEntity() {
+
   return *this;
 }
-HeaderProcessor& HeaderProcessor::handleAnonymousUnion() {
+HeaderProcessor& HeaderProcessor::handleUnnamedUnion() {
   return *this;
 }
 HeaderProcessor &HeaderProcessor::eraseEmptyExport() {

@@ -22,10 +22,10 @@ int main(int argc, char *argv[]) {
   program.add_argument("-m", "--merge")
     .help("Merge header and corresponding source into one header")
     .store_into(merge);
-  program.add_argument("-i", "--indent")
+  /*program.add_argument("-i", "--indent")
     .help("Set indentation size for export blocks (and definitions later)")
     .scan<'i', int>()
-    .store_into(indent);
+    .store_into(indent);*/
   program.add_argument("--header-extension")
     .help("Set header extension")
     .default_value(".hpp")
@@ -55,10 +55,10 @@ int main(int argc, char *argv[]) {
     if(path.extension() == hdrExt) {
       hdrP.
       read(header, path)
-      .exportNoNS()
+      .include2Import()
+      .exportNoUnnamedNS()
       .eraseEmptyExport()
       .write(header, path)
-      //.write(header, path)
       ;
     }
     header.close();

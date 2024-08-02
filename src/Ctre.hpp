@@ -219,6 +219,7 @@ the License, but only in their entirety and only with respect to the Combined
 Software.
 */
 // 
+using size_t = std::size_t;
 #ifndef CTRE_V2__CTRE__HPP
 #define CTRE_V2__CTRE__HPP
 
