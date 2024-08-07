@@ -1,2 +1,2 @@
 #!/bin/bash
-clang++-20 -std=c++23 Main.cc HeaderProcessor.cc -o modulizer
+clang++-20 -std=c++23 -stdlib=libc++ Main.cc HeaderProcessor.cc -o modulizer

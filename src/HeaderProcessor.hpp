@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include <fstream>
 struct NS {
   size_t open;
   size_t close;
@@ -8,11 +9,11 @@ struct NS {
 };
 class HeaderProcessor {
   std::string text;
+  std::fstream hdr;
   bool verbose{};
-  int indent{};
 public:
-  HeaderProcessor(bool v, int i) : verbose{v}, indent{i} {};
-  HeaderProcessor& read(std::fstream& in, const std::filesystem::path& p);
+  HeaderProcessor(bool v) : verbose{v} {};
+  HeaderProcessor& load(const std::filesystem::path& p);
 
   HeaderProcessor& include2Import(); // FIXME: Convert include path to module name
   
@@ -22,5 +23,6 @@ public:
   HeaderProcessor& handleStaticEntity();
 
   HeaderProcessor& eraseEmptyExport();
-  HeaderProcessor& write(std::fstream& out, const std::filesystem::path& p);
+  HeaderProcessor& write(const std::filesystem::path& p);
+  HeaderProcessor& appendSrc(const std::filesystem::path& p);
 };

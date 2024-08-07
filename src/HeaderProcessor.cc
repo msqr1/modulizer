@@ -1,28 +1,32 @@
 #include "HeaderProcessor.hpp"
+#include "Logging.h"
 #include "Ctre.hpp"
 #include <cstring>
-#include <iostream>
 #include <vector>
+#include <iostream>
+#include <print>
 #include <algorithm>
 #include <fstream>
 namespace fs = std::filesystem;
 NS::NS(size_t open, size_t close) : open{open}, close{close} {}
 NS::NS() : open{0}, close{0} {}
-HeaderProcessor& HeaderProcessor::read(std::fstream& in, const fs::path& p) {
+HeaderProcessor& HeaderProcessor::load(const fs::path& p) {
+  hdr.open(p);
+  if(!hdr.good()) logAndExit("Unable to load {}", p.c_str());
   size_t size{fs::file_size(p)};
   text.clear();
   // Resize but don't initialize
   text.resize_and_overwrite(size, [](const char*, size_t size) {
     return size;
   });
-  in.read(text.data(), size);
+  hdr.read(text.data(), size);
   return *this;
 }
-HeaderProcessor &HeaderProcessor::include2Import() {
+HeaderProcessor& HeaderProcessor::include2Import() {
   // Since the equivalent import is always shorter than the include, we replace and do erase-remove idiom
   auto it{text.begin()};
   size_t include{};
-  for(const auto& kept : ctre::multiline_split<"#include +\"(.+)\"">(text)) {
+  for(const auto& kept : ctre::multiline_split<R"(#include\s*\"(.+)\"")">(text)) {
     it = std::ranges::copy(kept, it).out;
     include = kept.get<1>().size();
     if(include > 0) {
@@ -89,13 +93,12 @@ HeaderProcessor& HeaderProcessor::exportNoUnnamedNS() {
   return *this;
 }
 HeaderProcessor& HeaderProcessor::handleStaticEntity() {
-
   return *this;
 }
 HeaderProcessor& HeaderProcessor::handleUnnamedUnion() {
   return *this;
 }
-HeaderProcessor &HeaderProcessor::eraseEmptyExport() {
+HeaderProcessor& HeaderProcessor::eraseEmptyExport() {
   // Erase-remove idiom with regex
   auto it{text.begin()};
   for (const auto& kept : ctre::split<R"(export\s*\{\s*\})">(text)) {
@@ -104,8 +107,11 @@ HeaderProcessor &HeaderProcessor::eraseEmptyExport() {
   text.erase(it, text.end());
   return *this;
 }
-HeaderProcessor &HeaderProcessor::write(std::fstream& out, const fs::path& p) {
+HeaderProcessor& HeaderProcessor::write(const fs::path& p) {
   //fs::resize_file(p, 0);
   std::cout << text << "\n";
   return *this;
 }
+HeaderProcessor& HeaderProcessor::appendSrc(const fs::path& p) {
+  return *this;
+} 

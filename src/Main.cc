@@ -6,11 +6,10 @@ namespace fs = std::filesystem;
 int main(int argc, char *argv[]) {
   bool merge{};
   bool verbose{};
-  int indent{};
   std::string inDir;
   std::string hdrExt;
   std::string srcExt;
-
+  std::ios_base::sync_with_stdio(false);
   ap::ArgumentParser program("modulizer");
   program.add_description("C++20 modularizer in C++20");
   program.add_argument("inDir")
@@ -22,10 +21,6 @@ int main(int argc, char *argv[]) {
   program.add_argument("-m", "--merge")
     .help("Merge header and corresponding source into one header")
     .store_into(merge);
-  /*program.add_argument("-i", "--indent")
-    .help("Set indentation size for export blocks (and definitions later)")
-    .scan<'i', int>()
-    .store_into(indent);*/
   program.add_argument("--header-extension")
     .help("Set header extension")
     .default_value(".hpp")
@@ -36,31 +31,33 @@ int main(int argc, char *argv[]) {
     .store_into(srcExt);
   try {
     program.parse_args(argc, argv);
+    fs::path path;
+    HeaderProcessor hdrP{verbose};
+    for(const auto& entry : fs::directory_iterator(inDir)) {
+      path = entry.path();
+      if(path.extension() == hdrExt) {
+        
+        hdrP
+        .load(path)
+        .include2Import()
+        .exportNoUnnamedNS()
+        .eraseEmptyExport()
+        .write(path)
+        ;
+      }
+      path.replace_extension(srcExt);
+      if(fs::exists(path)) {
+        if(merge) {
+          hdrP.appendSrc(path);
+        }
+        else {
+
+        }
+      }
+    }
   }
   catch(const std::exception& err) {
     std::cerr << err.what() << "\n" << program;
     return 1;
-  }
-  fs::path path;
-  fs::path srcPath;
-  std::fstream header;
-  HeaderProcessor hdrP{verbose, indent};
-  for(const auto& entry : fs::directory_iterator(inDir)) {
-    path = entry.path();
-    header.open(path);
-    if(!header.is_open()) {
-      std::cerr << "Unable to open " << path << "\n";
-      return 1;
-    }
-    if(path.extension() == hdrExt) {
-      hdrP.
-      read(header, path)
-      .include2Import()
-      .exportNoUnnamedNS()
-      .eraseEmptyExport()
-      .write(header, path)
-      ;
-    }
-    header.close();
   }
 }
