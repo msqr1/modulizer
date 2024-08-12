@@ -36,24 +36,24 @@ int main(int argc, char *argv[]) {
     for(const auto& entry : fs::directory_iterator(inDir)) {
       path = entry.path();
       if(path.extension() == hdrExt) {
-        
         hdrP
         .load(path)
-        .include2Import()
-        .exportNoUnnamedNS()
-        .eraseEmptyExport()
-        .write(path)
+        .sysInclude2GMF()
         ;
       }
-      path.replace_extension(srcExt);
-      if(fs::exists(path)) {
+      /*if(fs::exists(path.replace_extension(srcExt))) {
         if(merge) {
           hdrP.appendSrc(path);
         }
         else {
-
+          
         }
       }
+      hdrP
+      .usrInclude2Import()
+      .sysInclude2GMF()
+      .write()
+      ;*/
     }
   }
   catch(const std::exception& err) {

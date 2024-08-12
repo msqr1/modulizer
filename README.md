@@ -3,6 +3,7 @@ C++20 modularizer, convert #include code into using C++ module
 
 # Requirements
 - Valid standard C++20
+- Headers content won't be affected by outside macros (maybe changing later)
 
 # Dependencies
 - [CTRE](https://github.com/hanickadot/compile-time-regular-expressions) commit 129d535 modded
