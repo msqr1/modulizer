@@ -13,37 +13,32 @@ size_t rtnSize(const char*, size_t size) {
   return size;
 }
 HeaderProcessor& HeaderProcessor::load(const fs::path& hdrPath) {
+  this->hdrPath = hdrPath;
   hdr.open(hdrPath);
   if(!hdr.good()) logAndExit("Unable to load header {}", hdrPath.c_str());
   size_t size{fs::file_size(hdrPath)};
   text.clear();
   text.resize_and_overwrite(size, rtnSize);
   hdr.read(text.data(), size);
-  //fs::resize_file(hdrPath, 0);
   return *this;
 }
 HeaderProcessor& HeaderProcessor::sysInclude2GMF() {
   auto it{text.rend()};
-  for(const auto& kept : ctre::multiline_split<R"((#\s*include\s*<.+>))">(text)) {
+  for(const auto& kept : ctre::multiline_split<R"((#\s*include\s*<.+>\s*\n))">(text)) {
     if(kept.get<1>().data_unsafe() == nullptr) continue;
     std::rotate(std::make_reverse_iterator(kept.get<1>().end()),std::make_reverse_iterator(kept.end()), it);
     it -= kept.get<1>().size();
   }
+  std::format_to(std::inserter(text, it.base()), "export module {};\n", hdrPath.stem().c_str());
   return *this;
 }
 HeaderProcessor& HeaderProcessor::usrInclude2Import() {
   // Since the equivalent import is always shorter than the include, we replace and do erase-remove idiom
   auto it{text.begin()};
-  size_t include{};
-  for(const auto& kept : ctre::multiline_split<R"(#\s*include\s*\"(.+)\"")">(text)) {
+  for(const auto& kept : ctre::multiline_split<R"(#\s*include\s*\"(.+)\")">(text)) {
     it = std::ranges::copy(kept, it).out;
-    include = kept.get<1>().size();
-    if(include < 0) continue;
-    std::memcpy(&*it, "import ", 7);
-    it += 7;
-    std::memcpy(&*it, kept.get<1>().data_unsafe(), include);
-    it += include;
-    *it++ = ';';
+    if(kept.get<1>().data_unsafe() != nullptr) 
+      it = std::format_to(it, "import {};", kept.get<1>().to_view());
   }
   text.erase(it, text.end());
   return *this;
@@ -53,22 +48,22 @@ HeaderProcessor& HeaderProcessor::exportNoUnnamedNS() {
   static constexpr std::string_view CLOSE_EXPORT{"}"};
   static constexpr size_t EXPORT_LEN{OPEN_EXPORT.size() + CLOSE_EXPORT.size()};
   // Use as a stack but still need to iterate over
-  std::vector<NS> stackLike;
+  std::vector<NS> stack;
   std::string::iterator it;
   std::string::iterator begin;
   NS self;
   NS* parent;
   bool unnamed{};
   auto search{ctre::search<R"((?:inline\s+)?namespace(.*?)\{)">};
-  stackLike.emplace_back(0, text.size());
-  while(!stackLike.empty()) {
+  stack.emplace_back(0, text.size());
+  while(!stack.empty()) {
     begin = text.begin();
-    parent = &stackLike.back();
+    parent = &stack.back();
     auto NS = search(begin + parent->open, begin + parent->close);
     if(NS.data() == nullptr) {
       text.insert(parent->close, CLOSE_EXPORT).insert(parent->open, OPEN_EXPORT);
-      stackLike.pop_back();
-      for(auto& [open, close] : stackLike) {
+      stack.pop_back();
+      for(auto& [open, close] : stack) {
         open += EXPORT_LEN;
         close += EXPORT_LEN;
       }
@@ -91,12 +86,12 @@ HeaderProcessor& HeaderProcessor::exportNoUnnamedNS() {
     text.insert(NS.begin() - begin, CLOSE_EXPORT).insert(parent->open, OPEN_EXPORT);
     self.open += EXPORT_LEN;
     self.close += EXPORT_LEN;
-    for(auto& [open, close] : stackLike) {
+    for(auto& [open, close] : stack) {
       open += EXPORT_LEN;
       close += EXPORT_LEN;
     }
     parent->open = self.close + 1;
-    if(!unnamed) stackLike.emplace_back(self);
+    if(!unnamed) stack.emplace_back(self);
   }
   return *this;
 }
@@ -110,7 +105,12 @@ HeaderProcessor& HeaderProcessor::eraseEmptyExport() {
   return *this;
 }
 HeaderProcessor& HeaderProcessor::write() {
-  //std::print(hdr, "module;\n{}", text);
+  /*hdr
+  .seekp(0)
+  .write("module;\n", 8)
+  .write(text.data(), text.size());
+  */
+  hdr.close();
   std::print("{}", text);
   return *this;
 }
@@ -119,11 +119,10 @@ HeaderProcessor& HeaderProcessor::appendSrc(const fs::path& srcPath) {
     size_t size{fs::file_size(srcPath)};
     text.resize_and_overwrite(size + text.size(), rtnSize);
     src.read(text.data() + text.size(), size);
-    src.close();
-    //fs::remove(srcPath);
   }
   else {
     logAndExit("Unable to append source {}", srcPath.c_str());
   }
+  //fs::remove(srcPath);
   return *this;
 }

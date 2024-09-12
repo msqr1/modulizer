@@ -1,6 +1,7 @@
 #include "Argparse.hpp"
 #include "HeaderProcessor.hpp"
 #include <fstream>
+#include <print>
 namespace ap = argparse;
 namespace fs = std::filesystem;
 int main(int argc, char *argv[]) {
@@ -41,7 +42,7 @@ int main(int argc, char *argv[]) {
         .sysInclude2GMF()
         ;
       }
-      /*if(fs::exists(path.replace_extension(srcExt))) {
+      if(fs::exists(path.replace_extension(srcExt))) {
         if(merge) {
           hdrP.appendSrc(path);
         }
@@ -53,11 +54,11 @@ int main(int argc, char *argv[]) {
       .usrInclude2Import()
       .sysInclude2GMF()
       .write()
-      ;*/
+      ;
     }
   }
   catch(const std::exception& err) {
-    std::cerr << err.what() << "\n" << program;
+    std::println(stderr, "{}", err.what());
     return 1;
   }
 }
