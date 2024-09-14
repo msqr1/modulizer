@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
   std::string inDir;
   std::string hdrExt;
   std::string srcExt;
-  std::ios_base::sync_with_stdio(false);
+  std::ios::sync_with_stdio(false);
   ap::ArgumentParser program("modulizer");
   program.add_description("C++20 modularizer in C++20");
   program.add_argument("inDir")
@@ -33,16 +33,19 @@ int main(int argc, char *argv[]) {
   try {
     program.parse_args(argc, argv);
     fs::path path;
-    HeaderProcessor hdrP{verbose};
+    HeaderProcessor hdrP;
     for(const auto& entry : fs::directory_iterator(inDir)) {
       path = entry.path();
       if(path.extension() == hdrExt) {
         hdrP
         .load(path)
-        .sysInclude2GMF()
+        .exportNoUnnamedNS()
+        .unexportStaticUnion()
+        .eraseEmptyExport()
+        .write()
         ;
       }
-      if(fs::exists(path.replace_extension(srcExt))) {
+      /*if(fs::exists(path.replace_extension(srcExt))) {
         if(merge) {
           hdrP.appendSrc(path);
         }
@@ -54,11 +57,12 @@ int main(int argc, char *argv[]) {
       .usrInclude2Import()
       .sysInclude2GMF()
       .write()
-      ;
+      ;*/
     }
   }
   catch(const std::exception& err) {
     std::println(stderr, "{}", err.what());
     return 1;
   }
+  
 }
