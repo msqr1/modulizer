@@ -25,19 +25,19 @@
         -  ```-v --verbose``` - Enable verbose output (debugging)
         -  ```-m --merge``` - Merge source and header files into a single module
         -  ```-o --out-dir``` - Specify output directory (defaults to input directory)
-        -  ```--header-extension``` - Comma-separated list of header file extensions (e.g., ```.hpp,.h```)
-        -  ```--source-extension``` - Comma-separated list of source file extensions (e.g., ```.cpp,.cc```)
-        -  ```--module-extension``` - Module extension(s) (e.g., ```.cppm,.ixx```)
+        -  ```--header-extension-regex``` - Header file extension(s) regex
+        -  ```--source-extension-regex``` - Source file extension(s) regex
+        -  ```--module-extension``` - Module file extension
     - ```.conf```-only (complex/rarely changed):
         - ```openExport``` - Syntax for opening an export section
         - ```closeExport``` - Syntax for closing an export section
-- CLI options map to ```.conf``` for CLI + ```.conf``` by joining words and using camelCase (eg., ```--out-dir``` --> ```outDir```).
+- CLI options map to ```.conf``` for CLI + ```.conf``` by joining words and using camelCase (eg., ```--out-dir``` becomes ```outDir```).
 - Default values for (CLI + ```.conf```) and ```.conf```-only inputs:
     - verbose: ```false``` [boolean]
     - merge: ```false``` [boolean]
     - outDir: (same as ```inDir```) [string]
-    - headerExtension: ```[".hpp, ".h"]``` [string array]
-    - sourceExtension: ```[".cpp", ".cc"]``` [string array]
+    - headerExtensionRegex: ```"\.h(pp|xx)?"``` [string]
+    - sourceExtensionRegex: ```"\.c(pp|c|xx)"``` [string]
     - moduleExtension: ```".cppm"``` [string]
     - openExport: ```export {\n``` [string]
     - closeExport: ```}\n``` [string]
