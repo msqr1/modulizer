@@ -14,7 +14,7 @@
 
 ## Design
 - A CLI tool
-- Input & options
+- Input & options:
     - Precedent: CLI > ```.conf``` > default
     - CLI only: 
         -  ```[inDir]``` - Input directory
@@ -25,29 +25,29 @@
         -  ```-v --verbose``` - Enable verbose output (debugging)
         -  ```-m --merge``` - Merge source and header files into a single module
         -  ```-o --out-dir``` - Specify output directory (defaults to input directory)
-        -  ```--header-extension-regex``` - Header file extension(s) regex
-        -  ```--source-extension-regex``` - Source file extension(s) regex
+        -  ```--header-extension-regex``` - Header file extension regex
+        -  ```--source-extension-regex``` - Source file extension regex
         -  ```--module-extension``` - Module file extension
     - ```.conf```-only (complex/rarely changed):
         - ```openExport``` - Syntax for opening an export section
         - ```closeExport``` - Syntax for closing an export section
-- CLI options map to ```.conf``` for CLI + ```.conf``` by joining words and using camelCase (eg., ```--out-dir``` becomes ```outDir```).
-- Default values for (CLI + ```.conf```) and ```.conf```-only inputs:
-    - verbose: ```false``` [boolean]
-    - merge: ```false``` [boolean]
-    - outDir: (same as ```inDir```) [string]
-    - headerExtensionRegex: ```"\.h(pp|xx)?"``` [string]
-    - sourceExtensionRegex: ```"\.c(pp|c|xx)"``` [string]
-    - moduleExtension: ```".cppm"``` [string]
-    - openExport: ```export {\n``` [string]
-    - closeExport: ```}\n``` [string]
-- Config file syntax follow [TOML](https://toml.io/en)
+    - CLI options map to ```.conf``` for CLI + ```.conf``` by joining words and using camelCase (eg., ```--out-dir``` becomes ```outDir```).
+    - Default values for (CLI + ```.conf```) and ```.conf```-only inputs:
+        - verbose: ```false``` [boolean]
+        - merge: ```false``` [boolean]
+        - outDir: (same as ```inDir```) [string]
+        - headerExtensionRegex: ```"\.h(pp|xx)?"``` [string]
+        - sourceExtensionRegex: ```"\.c(pp|c|xx)"``` [string]
+        - moduleExtension: ```".cppm"``` [string]
+        - openExport: ```export {\n``` [string]
+        - closeExport: ```}\n``` [string]
+    - Config file syntax follow [TOML](https://toml.io/en)
 
 ## Design goals
 - **Automation**: Refactor code into named modules automatically
 - **Validity**: Generate correct C++20 code
 - **Macro handling**: Handle preprocessor macros, especially #include guards, correctly
-- **Preserve style and maintainability**: Modifications integrate nicely with the codebase's existing style
+- **Preserve style and maintainability**: Modifications must integrate nicely with the codebase's existing style
 
 ## Code input requirement
 - Headers must not define macros that affect other files
