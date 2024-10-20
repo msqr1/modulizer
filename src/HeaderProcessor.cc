@@ -112,7 +112,7 @@ HeaderProcessor& HeaderProcessor::eraseEmptyExport() {
   txt.erase(it, txt.end());
   return *this;
 }
-HeaderProcessor &HeaderProcessor::unexportStaticUnion() {
+HeaderProcessor& HeaderProcessor::unexportStaticUnion() {
   auto search{ctre::search<R"((static\s+)?union\s*\{)">};
   std::string::iterator begin{txt.begin()};
   size_t start{};
@@ -137,7 +137,7 @@ HeaderProcessor &HeaderProcessor::unexportStaticUnion() {
   }
   return *this;
 }
-HeaderProcessor &HeaderProcessor::write()
+HeaderProcessor& HeaderProcessor::write()
 {
   /*hdr
   .seekp(0)

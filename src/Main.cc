@@ -22,14 +22,6 @@ int main(int argc, char *argv[]) {
   program.add_argument("-m", "--merge")
     .help("Merge header and corresponding source into one header")
     .store_into(merge);
-  program.add_argument("--header-extension")
-    .help("Set header extension")
-    .default_value(".hpp")
-    .store_into(hdrExt);
-  program.add_argument("--source-extension")
-    .help("Set source extension")
-    .default_value(".cpp")
-    .store_into(srcExt);
   try {
     program.parse_args(argc, argv);
     fs::path path;
