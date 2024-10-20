@@ -1,6 +1,6 @@
 #include "HeaderProcessor.hpp"
 #include "Logging.h"
-#include "Ctre.hpp"
+#include "../3rd-party/Ctre.hpp"
 #include <cstring>
 #include <vector>
 #include <print>

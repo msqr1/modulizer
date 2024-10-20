@@ -1,57 +1,56 @@
-# MVP spec for Modulizer
+# Modulizer MVP spec
+- This document outlines the Minimum Viable Product (MVP) specification for Modulizer, a command-line tool (CLI) designed to automatically convert C++ code into C++20 modules
 - C++ modules intro: https://en.cppreference.com/w/cpp/language/modules
 
 ## Motivation (why modules?)
-- Faster compilation (good for incremental build) because header files are only compiled once instead of every time it's #included
-- Isolation pf preprocessor macros
-- Allow merging of interface (header) and implementation (source) into one file
+- **Faster compilation**: Good for incremental builds because header files are only compiled once instead of every time it's #included
+- **Macro isolation**: Prevent unintended side effects from preprocessor macros
+- **Simplified code organization**: Merging interface and implementation into a single file
 
-## Existing solution
-- Refactor code by hand into named modules (best, but slow)
-- Treat the header as an importable header, just change ```#include <...>``` to ```import <...>;``` (faster, but the definition of "importable" depends on the compiler)
-- Using precompiled headers (just as fast as modules, but non-standard and most implementation only allow 1 per translation unit)
+## Existing solution 
+- **Refactor code manually into named modules**: Best control, but this approach is painful and error-prone
+- **Treat the header as an importable header (only change ```#include <...>``` to ```import <...>;```)**: faster to do, but the definition of "importable" depends on the compiler
+- **Using precompiled headers**: More mature support, but non-standard and most implementation only allow 1 per translation unit
 
 ## Design
 - A CLI tool
-- Input
+- Input & options
     - Precedent: CLI > ```.conf``` > default
-    - CLI only input 
+    - CLI only: 
         -  ```[inDir]``` - Input directory
-        -  ```-c --config [path]``` - Specify a configuration file (```.conf```)
+        -  ```-c --config``` - Optional path to a configuration file (```.conf```)
         -  ```-h --help``` - Print help and exit
         -  ```-V --version``` - Print version and exit
-    - Input available on CLI + ```.conf``` (simple/frequent use/rarely changed)
-        -  ```-v --verbose``` - Activate verbose output (mostly for debugging)
-        -  ```-m --merge``` - Merge source and header
-        -  ```-o --out-dir [path]``` - Output directory
-        -  ```--source-extension [...] ``` - Specify source extension
-        -  ```--header-extension [...]``` - Specify header extension
-        -  ```--module-extension [...]``` - Specify module extension
-    - ```.conf``` only input (complex/rarely changed):
-        - ```openExport``` - Export section start syntax
-        - ```closeExport``` - Export section end syntax
-- CLI to ```.conf``` map for CLI + ```.conf``` inputs: join words and use camelCase
-- Default values for (CLI + ```.conf```) inputs:
-    - verbose: ```false```
-    - merge: ```false```
-    - outDir: (same as ```inDir```)
-    - headerExtension: ```hpp```
-    - sourceExtension: ```cpp```
-    - moduleExtension: ```cppm```
-- Default values for ```.conf``` only inputs:
-    - openExport: ```export {\n```
-    - closeExport: ```}\n```
-- Config file syntax (TOML):
-```
-[modulizer]
-config1 = "string"
-config2 = true
-...
-```
-## Design goal
-- Refactor code into named modules automatically (FAST)
-- Must generate valid, modularized C++20 code.
-- Must handle preprocessor macros and specifically, #include guards, correctly
+    - CLI + ```.conf``` (simple/frequent use/rarely changed)
+        -  ```-v --verbose``` - Enable verbose output (debugging)
+        -  ```-m --merge``` - Merge source and header files into a single module
+        -  ```-o --out-dir``` - Specify output directory (defaults to input directory)
+        -  ```--header-extension``` - Comma-separated list of header file extensions (e.g., ```.hpp,.h```)
+        -  ```--source-extension``` - Comma-separated list of source file extensions (e.g., ```.cpp,.cc```)
+        -  ```--module-extension``` - Module extension(s) (e.g., ```.cppm,.ixx```)
+    - ```.conf```-only (complex/rarely changed):
+        - ```openExport``` - Syntax for opening an export section
+        - ```closeExport``` - Syntax for closing an export section
+- CLI options map to ```.conf``` for CLI + ```.conf``` by joining words and using camelCase (eg., ```--out-dir``` --> ```outDir```).
+- Default values for (CLI + ```.conf```) and ```.conf```-only inputs:
+    - verbose: ```false``` [boolean]
+    - merge: ```false``` [boolean]
+    - outDir: (same as ```inDir```) [string]
+    - headerExtension: ```[".hpp, ".h"]``` [string array]
+    - sourceExtension: ```[".cpp", ".cc"]``` [string array]
+    - moduleExtension: ```".cppm"``` [string]
+    - openExport: ```export {\n``` [string]
+    - closeExport: ```}\n``` [string]
+- Config file syntax follow [TOML](https://toml.io/en)
+
+## Design goals
+- **Automation**: Refactor code into named modules automatically
+- **Validity**: Generate correct C++20 code
+- **Macro handling**: Handle preprocessor macros, especially #include guards, correctly
+- **Preserve style and maintainability**: Modifications integrate nicely with the codebase's existing style
 
 ## Code input requirement
 - Headers must not define macros that affect other files
+
+## Future features
+- Dependency analysis
