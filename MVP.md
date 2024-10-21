@@ -15,7 +15,7 @@
 ## Design
 - A CLI tool
 - Input & options:
-    - Precedent: CLI > ```.conf``` > default
+    - Precedent: CLI > ```.conf``` > default except for verbose
     - CLI only: 
         -  ```[inDir]``` - Input directory
         -  ```-c --config``` - Optional path to a configuration file (```.conf```)
@@ -23,9 +23,9 @@
         -  ```-V --version``` - Print version and exit
     - CLI + ```.conf``` (simple/frequent use/rarely changed)
         -  ```-v --verbose``` - Enable verbose output (debugging)
-        -  ```-m --merge``` - Merge source and header files into a single module
-        -  ```-o --out-dir``` - Specify output directory (defaults to input directory)
-        -  ```--header-extension-regex``` - Header file extension regex
+        -  ```-m --merge``` - Merge declarations and definition into a single entity
+        -  ```-o --out-dir``` - output directory (defaults to input directory)
+        -  ```--header-extension-reg ex``` - Header file extension regex
         -  ```--source-extension-regex``` - Source file extension regex
         -  ```--module-extension``` - Module file extension
     - ```.conf```-only (complex/rarely changed):
@@ -34,7 +34,7 @@
     - CLI options map to ```.conf``` for CLI + ```.conf``` by joining words and using camelCase (eg., ```--out-dir``` becomes ```outDir```).
     - Default values for (CLI + ```.conf```) and ```.conf```-only inputs:
         - verbose: ```false``` [boolean]
-        - merge: ```false``` [boolean]
+        - merge: ```true``` [boolean]
         - outDir: (same as ```inDir```) [string]
         - headerExtensionRegex: ```"\.h(pp|xx)?"``` [string]
         - sourceExtensionRegex: ```"\.c(pp|c|xx)"``` [string]
@@ -51,6 +51,7 @@
 
 ## Code input requirement
 - Headers must not define macros that affect other files
+- Declarations in one header must have their definitions in one source with the same base name
 
 ## Future features
 - Dependency analysis
