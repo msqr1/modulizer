@@ -23,22 +23,24 @@
         -  ```-V --version``` - Print version and exit
     - CLI + ```.conf``` (simple/frequent use/rarely changed)
         -  ```-v --verbose``` - Enable verbose output (debugging)
-        -  ```-m --merge``` - Merge declarations and definition into a single entity
+        -  ```-m --merge``` - Merge declarations and definition into a single entity, gu
         -  ```-o --out-dir``` - output directory (defaults to input directory)
-        -  ```--header-extension-reg ex``` - Header file extension regex
-        -  ```--source-extension-regex``` - Source file extension regex
-        -  ```--module-extension``` - Module file extension
+        -  ```--header-ext-regex``` - Header file extension regex
+        -  ```--source-ext-regex``` - Source file extension regex
+        -  ```--module-interface-ext``` - Module interface unit file extension
+        -  ```--module-implementation-ext``` Module implementation unit file extension (applicable only when merge is off)
     - ```.conf```-only (complex/rarely changed):
         - ```openExport``` - Syntax for opening an export section
         - ```closeExport``` - Syntax for closing an export section
     - CLI options map to ```.conf``` for CLI + ```.conf``` by joining words and using camelCase (eg., ```--out-dir``` becomes ```outDir```).
     - Default values for (CLI + ```.conf```) and ```.conf```-only inputs:
         - verbose: ```false``` [boolean]
-        - merge: ```true``` [boolean]
+        - merge: ```false``` [boolean]
         - outDir: (same as ```inDir```) [string]
-        - headerExtensionRegex: ```"\.h(pp|xx)?"``` [string]
-        - sourceExtensionRegex: ```"\.c(pp|c|xx)"``` [string]
-        - moduleExtension: ```".cppm"``` [string]
+        - headerExtRegex: ```"\.h(pp|xx)?"``` [string]
+        - sourceExtRegex: ```"\.c(pp|c|xx)"``` [string]
+        - moduleInterfaceExt: ```".cppm"``` [string]
+        - moduleImplementationExt: ```".impl.cppm``` [string]
         - openExport: ```export {\n``` [string]
         - closeExport: ```}\n``` [string]
     - Config file syntax follow [TOML](https://toml.io/en)
@@ -55,3 +57,4 @@
 
 ## Future features
 - Dependency analysis
+- Build system integration
