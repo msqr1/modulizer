@@ -8,3 +8,4 @@ C++20 modularizer, convert #include code into using C++ module
 # Dependencies
 - [CTRE](https://github.com/hanickadot/compile-time-regular-expressions) commit 129d535 modded
 - [Argparse](https://github.com/p-ranav/argparse) 3.1 modded
+- [Toml++](https://github.com/marzer/tomlplusplus) 3.4.0
