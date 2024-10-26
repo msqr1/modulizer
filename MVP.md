@@ -29,7 +29,6 @@
         -  ```--header-ext-regex``` - Header file extension regex
         -  ```--source-ext-regex``` - Source file extension regex
         -  ```--module-interface-ext``` - Module interface unit file extension
-        -  ```--module-implementation-ext``` Module implementation unit file extension (applicable only when merge is off)
     - ```.conf```-only (complex/rarely changed):
         - ```openExport``` - Syntax for opening an export section
         - ```closeExport``` - Syntax for closing an export section
@@ -41,7 +40,6 @@
         - headerExtRegex: ```"\.h(pp|xx)?"``` [string]
         - sourceExtRegex: ```"\.c(pp|c|xx)"``` [string]
         - moduleInterfaceExt: ```".cppm"``` [string]
-        - moduleImplementationExt: ```".impl.cppm``` [string]
         - openExport: ```export {\n``` [string]
         - closeExport: ```}\n``` [string]
     - Config file syntax follow [TOML](https://toml.io/en)

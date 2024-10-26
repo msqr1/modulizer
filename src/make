@@ -1,0 +1,17 @@
+#!/bin/sh
+# Clang 20 is required
+cxxFlags="-std=c++23 -stdlib=libc++ -fprebuilt-module-path=."
+moduleFlags="-fmodule-output -fexperimental-modules-reduced-bmi" 
+
+clang++ $cxxFlags $moduleFlags Base.cppm 
+clang++ $cxxFlags $moduleFlags ArgProcessor.cppm 
+clang++ $cxxFlags $moduleFlags FileOp.cppm
+clang++ $cxxFlags $moduleFlags Merger.cppm
+clang++ $cxxFlags $moduleFlags Exporter.cppm
+clang++ $cxxFlags $moduleFlags Modularizer.cppm
+
+clang++ $cxxFlags Main.cpp
+
+rm -f *.pcm *.out
+
+
