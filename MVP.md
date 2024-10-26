@@ -1,11 +1,12 @@
 # Modulizer MVP spec
 - This document outlines the Minimum Viable Product (MVP) specification for Modulizer, a command-line tool (CLI) designed to automatically convert C++ code into C++20 modules
-- C++ modules intro: https://en.cppreference.com/w/cpp/language/modules
+- C++ modules reference: https://en.cppreference.com/w/cpp/language/modules
+- C++ modules intro: https://vector-of-bool.github.io/2019/03/10/modules-1.html
 
 ## Motivation (why modules?)
 - **Faster compilation**: Good for incremental builds because header files are only compiled once instead of every time it's #included
 - **Macro isolation**: Prevent unintended side effects from preprocessor macros
-- **Simplified code organization**: Merging interface and implementation into a single file
+- **Simplified code organization**: Can merge interface and implementation into a single file
 
 ## Existing solution 
 - **Refactor code manually into named modules**: Best control, but this approach is painful and error-prone
@@ -52,9 +53,11 @@
 - **Preserve style and maintainability**: Modifications must integrate nicely with the codebase's existing style
 
 ## Code input requirement
+- Valid standard C++20
 - Headers must not define macros that affect other files
 - Declarations in one header must have their definitions in one source with the same base name
 
-## Future features
+## Maybe in the future
 - Dependency analysis
+- Parallel execution
 - Build system integration
