@@ -1,0 +1,15 @@
+module;
+#include <stddef.h>
+export module Base;
+export {
+bool verbose{};
+size_t rtnSize(char* _, size_t size) {
+  return size;
+}
+void vLog(const char* msg) {
+  if(verbose) {
+     
+  }
+}
+
+}
