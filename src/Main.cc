@@ -6,5 +6,6 @@ import Exporter;
 import Modularizer;
 
 int main(int argc, char* argv[]) {
+  std::cout << "Fish\n";
   return 0;
 }
