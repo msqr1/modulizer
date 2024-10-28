@@ -1,17 +1,15 @@
-#!/bin/sh
+#!/bin/bash
+# shellcheck disable=SC2086
 # Clang 20 is required
-cxxFlags="-std=c++23 -stdlib=libc++ -fprebuilt-module-path=."
-moduleFlags="-fmodule-output -fexperimental-modules-reduced-bmi" 
 
-clang++ $cxxFlags $moduleFlags Base.cppm 
-clang++ $cxxFlags $moduleFlags ArgProcessor.cppm 
-clang++ $cxxFlags $moduleFlags FileOp.cppm
-clang++ $cxxFlags $moduleFlags Merger.cppm
-clang++ $cxxFlags $moduleFlags Exporter.cppm
-clang++ $cxxFlags $moduleFlags Modularizer.cppm
+cxxFlags="-std=c++23 -stdlib=libc++ -fprebuilt-module-path= -fimplicit-module-maps -fimplicit-modules"
+moduleFlags="--precompile" 
 
-clang++ $cxxFlags Main.cpp
+files="Base.ccm ArgProcessor.ccm FileOp.ccm Merger.ccm Exporter.ccm Modularizer.ccm"
 
-rm -f *.pcm *.out
+clang++ $files $cxxFlags $moduleFlags 
+clang++ $cxxFlags Main.cc ${files//.cc/.pc} -o modulizer
+
+rm -f *.pcm modulizer
 
 
