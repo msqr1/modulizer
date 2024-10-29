@@ -14,25 +14,21 @@ if [ ! -d fast_io ]; then
   git init &&
   git fetch https://github.com/cppfastio/fast_io 788cb9810f0ca881d15fe594b0dd1144901d14d8 --depth 1 &&
   git checkout 788cb9810f0ca881d15fe594b0dd1144901d14d8 &&
+  # Go to include/fast_io_hosted/posix_error_scatter/impl.h and add #include <errno.h> under #if __has_include(<errno.h>)
   cd ..
 fi
 if [ ! -f Toml++.hpp ]; then
   wget https://raw.githubusercontent.com/marzer/tomlplusplus/refs/tags/v3.4.0/toml.hpp -O Toml++.hpp
 fi
 cd ../src &&
-cxxFlags="-std=c++23 -stdlib=libc++ -fprebuilt-module-path= -fimplicit-module-maps -fimplicit-modules"
-moduleFlags="-fmodule-output -fexperimental-modules-reduced-bmi"
+flags="-std=c++23 -stdlib=libc++"
 
 if [ "$1" = "1" ]; then
-  cxxFlags+="-Ofast -flto"
+  flags+="-Ofast -flto"
 fi
 
-files="Base.ccm ArgProcessor.ccm FileOp.ccm Merger.ccm Exporter.ccm Modularizer.ccm"
-
-clang++ $cxxFlags $moduleFlags -c $files
-clang++ $cxxFlags -o modulizer Main.cc ${files//.ccm/.o}
-
-rm -f *.pcm *.o
+files="Base.cc ArgProcessor.cc FileOp.cc Merger.cc Exporter.cc Modularizer.cc Main.cc"
+clang++ $flags -o modulizer
 
 
 

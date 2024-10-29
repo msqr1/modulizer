@@ -1,11 +1,5 @@
-#include "Types.hpp"
-import ArgProcessor;
-import FileOp;
-import Merger;
-import Exporter;
-import Modularizer;
+#include "Base.hpp"
 
 int main(int argc, char* argv[]) {
-  std::cout << "Fish\n";
   return 0;
 }
