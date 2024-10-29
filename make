@@ -28,7 +28,7 @@ if [ "$1" = "1" ]; then
 fi
 
 files="Base.cc ArgProcessor.cc FileOp.cc Merger.cc Exporter.cc Modularizer.cc Main.cc"
-clang++ $flags -o modulizer
+clang++ $flags -o modulizer $files
 
 
 

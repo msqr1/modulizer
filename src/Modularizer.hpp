@@ -1,0 +1,3 @@
+namespace modulizer {
+
+} // namespace modulizer
