@@ -7,11 +7,11 @@ struct Opts {
   StrView hdrExtRegex;
   StrView srcExtRegex;
   StrView moduleInterfaceExt;
-  StrView moduleImplExt;
   StrView openExport;
   StrView closeExport;
+  Opts();
 };
 
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose);
-  
+
 }

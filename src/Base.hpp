@@ -18,6 +18,7 @@ template <class T, class... Args> void log(T&& t, Args&&... args) {
   fio::io::println(t, args...);
 }
 template <class T, class... Args> void logIfVerbose(T&& t, Args&&... args) {
-  if(verbose) fio::io::println(t, args...);
+  if(verbose) log(t, args...);
 }
+
 } // namespace modulizer

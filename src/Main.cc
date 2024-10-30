@@ -10,10 +10,12 @@ int main(int argc, char* argv[]) {
   try {
     return run(argc, argv);
   }
-  catch(const Str& err) {
-    log(err);
+  
+  catch(const Str& errMsg) { // For modulizer exceptions
+    log(errMsg);
   }
-  catch(const std::exception& exc) {
+  catch(const std::exception& exc) { // For other exceptions
     log(StrView(exc.what()));
   }
+  return 1;
 }

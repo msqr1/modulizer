@@ -16,33 +16,31 @@
 ## Design
 - A CLI tool
 - Input & options:
-    - Precedent: CLI > ```.conf``` > default except for verbose
+    - Precedent: CLI > ```.toml``` > default except for verbose
     - CLI only: 
         -  ```[inDir]``` - Input directory
-        -  ```-c --config``` - Optional path to a configuration file (```.conf```)
+        -  ```-c --config``` - Optional path to a configuration file (```.toml```)
         -  ```-h --help``` - Print help and exit
         -  ```-V --version``` - Print version and exit
-    - CLI + ```.conf``` (simple/frequent use/rarely changed)
         -  ```-v --verbose``` - Enable verbose output (debugging)
-        -  ```-m --merge``` - Merge declarations and definition into a single entity, gu
+        -  ```-m --merge``` - Merge declarations and definition into a single entity
+    - CLI + ```.toml``` (simple/frequent use/rarely changed)
         -  ```-o --out-dir``` - output directory (defaults to input directory)
         -  ```--header-ext-regex``` - Header file extension regex
         -  ```--source-ext-regex``` - Source file extension regex
         -  ```--module-interface-ext``` - Module interface unit file extension
-    - ```.conf```-only (complex/rarely changed):
+    - ```.toml```-only (complex/rarely changed):
         - ```openExport``` - Syntax for opening an export section
         - ```closeExport``` - Syntax for closing an export section
-    - CLI options map to ```.conf``` for CLI + ```.conf``` by joining words and using camelCase (eg., ```--out-dir``` becomes ```outDir```).
-    - Default values for (CLI + ```.conf```) and ```.conf```-only inputs:
-        - verbose: ```false``` [boolean]
-        - merge: ```false``` [boolean]
+    - CLI options map to ```.toml``` for CLI + ```.toml``` by joining words and using camelCase (eg., ```--out-dir``` becomes ```outDir```).
+    - Default values for (CLI + ```.toml```) and ```.toml```-only inputs:
         - outDir: (same as ```inDir```) [string]
         - headerExtRegex: ```"\.h(pp|xx)?"``` [string]
         - sourceExtRegex: ```"\.c(pp|c|xx)"``` [string]
         - moduleInterfaceExt: ```".cppm"``` [string]
         - openExport: ```export {\n``` [string]
         - closeExport: ```}\n``` [string]
-    - Config file syntax follow [TOML](https://toml.io/en)
+    - Config file syntax follows [TOML](https://toml.io/en)
 - Architecture diagrams: https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=Modules.html#Uhttps%3A%2F%2Fraw.githubusercontent.com%2Fmsqr1%2Fmodulizer%2Fmain%2FModules.html
 
 ## Design goals
