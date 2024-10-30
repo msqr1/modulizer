@@ -10,10 +10,8 @@ struct Opts {
   StrView moduleImplExt;
   StrView openExport;
   StrView closeExport;
-private:
-  Str members;
 };
 
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose);
-
+  
 }
