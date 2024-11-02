@@ -16,24 +16,23 @@
 ## Design
 - A CLI tool
 - Input & options:
-    - Precedent: CLI > ```.toml``` > default except for verbose
-    - CLI only: 
-        -  ```[inDir]``` - Input directory
-        -  ```-c --config``` - Optional path to a configuration file (```.toml```)
+    - CLI only (flags, one-time settings): 
+        - ```[inDir]``` - Input directory
+        -  ```-c --config``` - Optional path to the configuration file (```.toml```)
         -  ```-h --help``` - Print help and exit
-        -  ```-V --version``` - Print version and exit
-        -  ```-v --verbose``` - Enable verbose output (debugging)
-        -  ```-m --merge``` - Merge declarations and definition into a single entity
-    - CLI + ```.toml``` (simple/frequent use/rarely changed)
-        -  ```-o --out-dir``` - output directory (defaults to input directory)
-        -  ```--header-ext-regex``` - Header file extension regex
-        -  ```--source-ext-regex``` - Source file extension regex
-        -  ```--module-interface-ext``` - Module interface unit file extension
-    - ```.toml```-only (complex/rarely changed):
+        -  ```-v --version``` - Print version and exit
+    - ```.toml```-only (modularization settings):
+        - ```outDir``` - Output directory (defaults to input directory)
+        - ```verbose``` - Enable verbose output (debugging)
+        - ```merge``` - Merge declarations and definition into a single entity
+        - ```headerExtRegex``` - Header file extension regex
+        - ```sourceExtRegex``` - Source file extension regex
+        - ```moduleInterfaceExt``` - Module interface unit file extension
         - ```openExport``` - Syntax for opening an export section
         - ```closeExport``` - Syntax for closing an export section
-    - CLI options map to ```.toml``` for CLI + ```.toml``` by joining words and using camelCase (eg., ```--out-dir``` becomes ```outDir```).
-    - Default values for (CLI + ```.toml```) and ```.toml```-only inputs:
+    - Default values for ```.toml```-only settings:
+        - verbose: ```false``` [boolean]
+        - merge: ```false``` [boolean]
         - outDir: (same as ```inDir```) [string]
         - headerExtRegex: ```"\.h(pp|xx)?"``` [string]
         - sourceExtRegex: ```"\.c(pp|c|xx)"``` [string]
