@@ -1,17 +1,16 @@
+#include <string_view>
 namespace modulizer {
 
 struct Opts {
   bool merge;
-  StrView inDir;
-  StrView outDir;
-  StrView hdrExtRegex;
-  StrView srcExtRegex;
-  StrView moduleInterfaceExt;
-  StrView openExport;
-  StrView closeExport;
-  Opts();
+  std::string_view inDir;
+  std::string_view outDir;
+  std::string_view hdrExtRegex;
+  std::string_view srcExtRegex;
+  std::string_view moduleInterfaceExt;
+  std::string_view openExport;
+  std::string_view closeExport;
 };
-
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose);
 
 }

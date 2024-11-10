@@ -1,5 +1,5 @@
 # Modulizer MVP spec
-- This document outlines the Minimum Viable Product (MVP) specification for Modulizer, a command-line tool (CLI) designed to automatically convert C++ code into C++20 modules
+- This document outlines the Minimum Viable Product (MVP) specification for Modulizer, a command-line tool (CLI) designed to automatically convert C++ with #include to modules
 - C++ modules reference: https://en.cppreference.com/w/cpp/language/modules
 - C++ modules intro: https://vector-of-bool.github.io/2019/03/10/modules-1.html
 

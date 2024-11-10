@@ -1,9 +1,7 @@
-WkSchedule.md
 test
-result
 .vscode
 src-old
-3rdParty
-src/*.pcm
-src/*.o
 src/modulizer
+3rdParty/*
+!3rdParty/Setup.cmake
+build

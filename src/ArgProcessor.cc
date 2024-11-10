@@ -1,67 +1,57 @@
 #include "Base.hpp"
 #include "ArgProcessor.hpp"
-#include <exception>
-#include <format>
+#include "../3rdParty/fmt/include/fmt/format.h"
+#define TOML_EXCEPTIONS 0
+#define TOML_ENABLE_FORMATTERS 0
+#include "../3rdParty/Toml++.hpp"
+
 
 namespace modulizer {
 
-const char* getVal(int& optidx, int argc, char* argv[]) {
+const char* getOptVal(int& optidx, int argc, char* argv[]) {
   optidx++;
   if(optidx == argc || argv[optidx][0] == '-') 
-    throwErr(std::format("Invalid value for {}", argv[optidx - 1]));
+    throwErr(fmt::format("Invalid value for {}", argv[optidx - 1]));
   else return argv[optidx];
 }
-Opts::Opts() : 
-  merge{false},
-  hdrExtRegex{R"(\\.h(pp|xx)?)"},
-  srcExtRegex{R"(\.c(pp|c|xx))"},
-  moduleInterfaceExt{".cppm"},
-  openExport{"export {\n"},
-  closeExport{"}\n"}
-{}
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   if(argc < 2) throwErr("No argument specified");
   Opts opts;
-  StrView arg, configPath;
+
+  std::string_view arg, configPath;
   arg = argv[1];
   // help or version must be the first argument, else it is inDir
   if(arg == "-h" || arg == "--help") {
-    log("Help message here");
+    log("Modularize C++20 code");
     std::exit(0);
   }
-  else if(arg == "-V" || arg == "--version") {
+  if(arg == "-v" || arg == "--version") {
     log("0.0.1");
     std::exit(0);
   }
-  else opts.inDir = arg;
+  opts.inDir = opts.outDir = arg;
   for(int optidx{2}; optidx < argc; ++optidx) {
     arg = argv[optidx];
-    if(arg == "-v" || arg == "--verbose") verbose = true;
-    else if(arg == "-m" || arg == "--merge") opts.merge = true;
-    else if(arg == "-c" || arg == "--config") {
-      configPath = getVal(optidx, argc, argv);
-      continue;
-    }
-    else if(arg == "-o" || arg == "--out-dir") {
-      opts.outDir = getVal(optidx, argc, argv);
-      continue;
-    }
-    else if(arg == "--header-ext-regex") {
-      opts.hdrExtRegex = getVal(optidx, argc, argv);
-      continue;
-    }
-    else if(arg == "--source-ext-regex") {
-      opts.srcExtRegex = getVal(optidx, argc, argv);
-      continue;
-    }
-    else if(arg == "--module-interface-ext") {
-      opts.moduleInterfaceExt = getVal(optidx, argc, argv);
-      continue;
-    }
-    else {
-      throwErr(std::format("Unknown option {}", arg));
-    }
+    if(arg == "-c" || arg == "--config") configPath = getOptVal(optidx, argc, argv);
+    else throwErr(fmt::format("Invalid option {}", arg));
   }
+  if(configPath.empty()) return opts;
+  auto parseRes{toml::parse_file(configPath)};
+  if(!parseRes) {
+    auto err{parseRes.error()};
+    throwErr(fmt::format("TOML++ error {0}", err.description()));
+  }
+  auto config{std::move(parseRes.table())};
+
+  // Default values
+  verbose = config["verbose"].value_or(false);
+  opts.merge = config["merge"].value_or(false);
+  opts.outDir = config["outDir"].value_or(opts.outDir);
+  opts.hdrExtRegex = config["headerExtRegex"].value_or(R"(\.h(pp|xx)?)");
+  opts.srcExtRegex = config["sourceExtRegex"].value_or(R"(\.c(pp|c|xx)");
+  opts.moduleInterfaceExt = config["moduleInterfaceExt"].value_or(".cppm");
+  opts.openExport = config["openExport"].value_or(".export {\n");
+  opts.closeExport = config["closeExport"].value_or("}\n");
   return opts;
 }
 
