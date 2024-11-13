@@ -5,3 +5,4 @@ src/modulizer
 3rdParty/*
 !3rdParty/Setup.cmake
 build
+CMakePresets.json
