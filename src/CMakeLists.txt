@@ -14,6 +14,8 @@ add_executable(modulizer Base.cc ArgProcessor.cc FileOp.cc Merger.cc Exporter.cc
 target_compile_features(modulizer PUBLIC cxx_std_23)
 add_subdirectory(../3rdParty/fmt "${CMAKE_BINARY_DIR}/fmt")
 target_link_libraries(modulizer fmt::fmt)
+add_subdirectory(../3rdParty/toml++ "${CMAKE_BINARY_DIR}/toml++")
+target_link_libraries(modulizer tomlplusplus::tomlplusplus)
 
 
 

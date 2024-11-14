@@ -25,6 +25,6 @@ if(NOT EXISTS fmt)
   gitClone(fmtlib/fmt 0c9fce2ffefecfdce794e1859584e25877b7b592 fmt)
 endif()
 
-if(NOT EXISTS Toml++.hpp)
-  file(DOWNLOAD https://raw.githubusercontent.com/marzer/tomlplusplus/30172438cee64926dc41fdd9c11fb3ba5b2ba9de/toml.hpp Toml++.hpp)
+if(NOT EXISTS toml++)
+  gitClone(marzer/tomlplusplus 30172438cee64926dc41fdd9c11fb3ba5b2ba9de toml++)
 endif()

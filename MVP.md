@@ -18,7 +18,7 @@
 - Input & options:
     - CLI only (flags, one-time settings): 
         - ```[inDir]``` - Input directory
-        -  ```-c --config``` - Optional path to the configuration file (```.toml```)
+        -  ```-c --config``` - Path to configuration file (```.toml```), default to ```modulizer.toml```
         -  ```-h --help``` - Print help and exit
         -  ```-v --version``` - Print version and exit
     - ```.toml```-only (modularization settings):

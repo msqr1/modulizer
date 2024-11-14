@@ -3,7 +3,7 @@
 #include "../3rdParty/fmt/include/fmt/format.h"
 #define TOML_EXCEPTIONS 0
 #define TOML_ENABLE_FORMATTERS 0
-#include "../3rdParty/Toml++.hpp"
+#include "../3rdParty/toml++/include/toml++/toml.hpp"
 
 
 namespace modulizer {
@@ -29,24 +29,25 @@ Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
     log("0.0.1");
     std::exit(0);
   }
-  opts.inDir = opts.outDir = arg;
+  opts.inDir = arg;
+  configPath = "modulizer.toml";
   for(int optidx{2}; optidx < argc; ++optidx) {
     arg = argv[optidx];
     if(arg == "-c" || arg == "--config") configPath = getOptVal(optidx, argc, argv);
     else throwErr(fmt::format("Invalid option {}", arg));
   }
-  if(configPath.empty()) return opts;
   auto parseRes{toml::parse_file(configPath)};
   if(!parseRes) {
-    auto err{parseRes.error()};
-    throwErr(fmt::format("TOML++ error {0}", err.description()));
+    auto err = parseRes.error();
+    auto errSrc = err.source();
+  throwErr(fmt::format("TOML++ error: {} @ {}({}:{})", err.description(), configPath, errSrc.begin.line, errSrc.begin.column));
   }
   auto config{std::move(parseRes.table())};
-
   // Default values
+  opts.outDir = config["outDir"].value_or("");
+  if(opts.outDir.empty()) throwErr("outDir must be specified/valid");
   verbose = config["verbose"].value_or(false);
   opts.merge = config["merge"].value_or(false);
-  opts.outDir = config["outDir"].value_or(opts.outDir);
   opts.hdrExtRegex = config["headerExtRegex"].value_or(R"(\.h(pp|xx)?)");
   opts.srcExtRegex = config["sourceExtRegex"].value_or(R"(\.c(pp|c|xx)");
   opts.moduleInterfaceExt = config["moduleInterfaceExt"].value_or(".cppm");
