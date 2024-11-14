@@ -11,11 +11,11 @@ namespace modulizer {
 const char* getOptVal(int& optidx, int argc, char* argv[]) {
   optidx++;
   if(optidx == argc || argv[optidx][0] == '-') 
-    throwErr(fmt::format("Invalid value for {}", argv[optidx - 1]));
+    exitWithErr(fmt::format("Invalid value for {}", argv[optidx - 1]));
   else return argv[optidx];
 }
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
-  if(argc < 2) throwErr("No argument specified");
+  if(argc < 2) exitWithErr("No argument specified");
   Opts opts;
 
   std::string_view arg, configPath;
@@ -34,18 +34,18 @@ Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   for(int optidx{2}; optidx < argc; ++optidx) {
     arg = argv[optidx];
     if(arg == "-c" || arg == "--config") configPath = getOptVal(optidx, argc, argv);
-    else throwErr(fmt::format("Invalid option {}", arg));
+    else exitWithErr(fmt::format("Invalid option {}", arg));
   }
   auto parseRes{toml::parse_file(configPath)};
   if(!parseRes) {
     auto err = parseRes.error();
     auto errSrc = err.source();
-  throwErr(fmt::format("TOML++ error: {} @ {}({}:{})", err.description(), configPath, errSrc.begin.line, errSrc.begin.column));
+  exitWithErr(fmt::format("TOML++ error: {} @ {}({}:{})", err.description(), configPath, errSrc.begin.line, errSrc.begin.column));
   }
   auto config{std::move(parseRes.table())};
   // Default values
   opts.outDir = config["outDir"].value_or("");
-  if(opts.outDir.empty()) throwErr("outDir must be specified/valid");
+  if(opts.outDir.empty()) exitWithErr("outDir must be specified/valid");
   verbose = config["verbose"].value_or(false);
   opts.merge = config["merge"].value_or(false);
   opts.hdrExtRegex = config["headerExtRegex"].value_or(R"(\.h(pp|xx)?)");

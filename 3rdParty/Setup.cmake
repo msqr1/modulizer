@@ -17,10 +17,6 @@ function(gitClone repo hash outDir)
   )
 endfunction(gitClone repo hash outDir)
 
-if(NOT EXISTS fast_io)
-  gitClone(cppfastio/fast_io 788cb9810f0ca881d15fe594b0dd1144901d14d8 fast_io)
-endif()
-
 if(NOT EXISTS fmt)
   gitClone(fmtlib/fmt 0c9fce2ffefecfdce794e1859584e25877b7b592 fmt)
 endif()
