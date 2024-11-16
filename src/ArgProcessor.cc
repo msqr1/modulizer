@@ -12,7 +12,7 @@ const char* getOptVal(int& optidx, int argc, char* argv[]) {
   optidx++;
   if(optidx == argc || argv[optidx][0] == '-') 
     exitWithErr("Invalid value for option {}", argv[optidx - 1]);
-  else return argv[optidx];
+  return argv[optidx];
 }
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   if(argc < 2) exitWithErr("No argument specified");

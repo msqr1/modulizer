@@ -24,3 +24,7 @@ endif()
 if(NOT EXISTS toml++)
   gitClone(marzer/tomlplusplus 30172438cee64926dc41fdd9c11fb3ba5b2ba9de toml++)
 endif()
+
+if(NOT EXISTS pcre2)
+  gitClone(PCRE2Project/pcre2 6ae58beca071f13ccfed31d03b3f479ab520639b pcre2)
+endif()
