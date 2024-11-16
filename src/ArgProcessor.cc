@@ -11,7 +11,7 @@ namespace modulizer {
 const char* getOptVal(int& optidx, int argc, char* argv[]) {
   optidx++;
   if(optidx == argc || argv[optidx][0] == '-') 
-    exitWithErr(fmt::format("Invalid value for {}", argv[optidx - 1]));
+    exitWithErr("Invalid value for option {}", argv[optidx - 1]);
   else return argv[optidx];
 }
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
@@ -34,13 +34,13 @@ Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   for(int optidx{2}; optidx < argc; ++optidx) {
     arg = argv[optidx];
     if(arg == "-c" || arg == "--config") configPath = getOptVal(optidx, argc, argv);
-    else exitWithErr(fmt::format("Invalid option {}", arg));
+    else exitWithErr("Invalid option {}", arg);
   }
   auto parseRes{toml::parse_file(configPath)};
   if(!parseRes) {
     auto err = parseRes.error();
     auto errSrc = err.source();
-  exitWithErr(fmt::format("TOML++ error: {} @ {}({}:{})", err.description(), configPath, errSrc.begin.line, errSrc.begin.column));
+  exitWithErr("TOML++ error: {} @ {}({}:{})", err.description(), configPath, errSrc.begin.line, errSrc.begin.column);
   }
   auto config{std::move(parseRes.table())};
   // Default values
