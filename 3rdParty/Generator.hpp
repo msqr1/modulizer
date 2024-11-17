@@ -8,8 +8,7 @@
 #include <exception>
 #include <iterator>
 
-// Fully conforming, so extending std is OK
-namespace std
+namespace cppcoro
 {
 	template<typename T>
 	class generator;

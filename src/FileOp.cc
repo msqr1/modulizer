@@ -1,18 +1,21 @@
 #include "FileOp.hpp"
-#include <filesystem>
 
 namespace fs = std::filesystem;
 namespace modulizer {
 
-std::vector<File> readFiles(std::string_view inDir, std::string_view hdrExtRegex, std::string_view srcExtRegex) {
+std::vector<File> readFiles(std::string_view inDir, re::Pattern& hdrExtRegex, re::Pattern& srcExtRegex) {
   std::vector<File> files;
   File file;
-  fs::path p;
+  std::string_view ext;
   for(const auto& ent : fs::recursive_directory_iterator(inDir)) {
-    p = ent.path();
-    file.path = p.c_str();
-    file.path = file.path.substr(inDir.length());
-    
+    file.path = ent.path();
+    ext = file.path.extension().c_str();
+    if(hdrExtRegex.match(ext)) {
+
+    }
+    else if(srcExtRegex.match(ext)) {
+      
+    }
   }
   return files;
 }

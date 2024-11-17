@@ -20,7 +20,24 @@ Capture Captures::operator[](int idx) {
   return Capture{ovector[idx], ovector[idx + 1]};
 }
 
+Pattern::Pattern(): pattern{nullptr}, matchData{nullptr} {}
+Pattern::Pattern(Pattern&& other): pattern{other.pattern}, matchData{other.matchData} {
+  other.pattern = nullptr;
+  other.matchData = nullptr;
+}
 Pattern::Pattern(std::string_view pat, uint32_t opts) {
+  set(pat, opts);
+}
+Pattern::~Pattern() {
+  free();
+}
+void Pattern::free() {
+  pcre2_code_free(pattern);
+  pcre2_match_data_free(matchData);
+}
+void Pattern::set(std::string_view pat, uint32_t opts) {
+  // Free old pattern
+  free();
   int status;
   size_t _; // Unused
   pattern = pcre2_compile(reinterpret_cast<PCRE2_SPTR>(pat.data()), pat.length(), opts, &status, &_, nullptr);
@@ -30,21 +47,17 @@ Pattern::Pattern(std::string_view pat, uint32_t opts) {
   matchData = pcre2_match_data_create_from_pattern(pattern, nullptr);
   if(matchData == nullptr) exitWithErr("Regex error: Unable to allocate memory for match");
 }
-Pattern::~Pattern() {
-  pcre2_code_free(pattern);
-  pcre2_match_data_free(matchData);
-}
 std::optional<Captures> Pattern::match(std::string_view subject, size_t startOffset, uint32_t opts) {
   int count{pcre2_jit_match(pattern, reinterpret_cast<PCRE2_SPTR>(subject.data()), subject.length(), startOffset, opts, matchData, nullptr)};
   ckErr(count);
   if(count < 1) return std::nullopt;
-  return Captures{pcre2_get_ovector_pointer(matchData)};
+  return pcre2_get_ovector_pointer(matchData);
 }
 std::optional<Captures> Pattern::match(std::string_view subject, uint32_t opts) {
   return match(subject, 0, opts);
 }
-std::generator<Captures> Pattern::matchAll(std::string_view subject, uint32_t opts) {
-  size_t startOffset;
+cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, uint32_t opts) {
+  size_t startOffset{};
   while(std::optional<Captures> maybeCaptures{match(subject, startOffset, opts)}) {
     Captures& captures{*maybeCaptures};
     startOffset = captures.ovector[1];

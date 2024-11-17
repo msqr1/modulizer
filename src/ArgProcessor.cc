@@ -42,16 +42,23 @@ Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   exitWithErr("TOML++ error: {} @ {}({}:{})", err.description(), configPath, errSrc.begin.line, errSrc.begin.column);
   }
   auto config{std::move(parseRes.table())};
+  
   // Default values
+  std::string_view hdrExtRegexStr{config["headerExtRegex"].value_or(R"(\.h(pp|xx)?)")};
+  std::string_view srcExtRegexStr{config["sourceExtRegex"].value_or(R"(\.c(pp|c|xx)")};
   opts.outDir = config["outDir"].value_or("");
   if(opts.outDir.empty()) exitWithErr("outDir must be specified/valid");
   verbose = config["verbose"].value_or(false);
   opts.merge = config["merge"].value_or(false);
-  opts.hdrExtRegex = config["headerExtRegex"].value_or(R"(\.h(pp|xx)?)");
-  opts.srcExtRegex = config["sourceExtRegex"].value_or(R"(\.c(pp|c|xx)");
+  opts.hdrExtRegex.set(hdrExtRegexStr);
+  opts.srcExtRegex.set(srcExtRegexStr);
   opts.moduleInterfaceExt = config["moduleInterfaceExt"].value_or(".cppm");
   opts.openExport = config["openExport"].value_or(".export {\n");
   opts.closeExport = config["closeExport"].value_or("}\n");
+
+  logIfVerbose("merge = {}\ninDir = {}\noutDir = {}\nhdrExtRegex = {}\nsrcExtRegex = {}\nmoduleInterfaceExt = {}\nopenExport = {}\ncloseExport = {}", opts.merge, opts.inDir, opts.outDir, hdrExtRegexStr, srcExtRegexStr, opts.moduleInterfaceExt, opts.openExport, opts.closeExport);
+  
+  // Implicit move construction
   return opts;
 }
 

@@ -1,4 +1,6 @@
 #include "Base.hpp"
+#include "Regex.hpp"
+#include <filesystem>
 #include <vector>
 
 namespace modulizer {
@@ -11,11 +13,11 @@ enum FileType {
 
 struct File {
   FileType type;
-  std::string_view path;
+  std::filesystem::path path;
   std::string content;
 };
 
-std::vector<File> readFiles(std::string_view inDir, std::string_view hdrExtRegex, std::string_view srcExtRegex);
+std::vector<File> readFiles(std::string_view inDir, re::Pattern& hdrExtRegex, re::Pattern& srcExtRegex);
 void writeFiles(std::string_view outDir, const std::vector<File>& files);
 
 } // namespace modulizer
