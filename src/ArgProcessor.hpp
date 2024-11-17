@@ -1,5 +1,7 @@
-#include <string_view>
+#pragma once
 #include "Regex.hpp"
+#include <filesystem>
+#include <string_view>
 
 namespace modulizer {
 
@@ -8,7 +10,7 @@ struct Opts {
   re::Pattern hdrExtRegex;
   re::Pattern srcExtRegex;
   std::string_view inDir;
-  std::string outDir;
+  std::filesystem::path outDir;
   std::string moduleInterfaceExt;
   std::string openExport;
   std::string closeExport;
@@ -17,3 +19,6 @@ struct Opts {
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose);
 
 } // namespace modulizer
+
+#define TOML_EXCEPTIONS 0
+#define TOML_ENABLE_FORMATTERS 0

@@ -9,7 +9,7 @@ using namespace modulizer;
 
 void run(int argc, char* argv[]) {
   Opts opts{getOptsOrExit(argc, argv, verbose)};
-  //readFiles(opts.inDir, opts.hdrExtRegex, opts.srcExtRegex);
+  readFiles(opts.inDir, opts.hdrExtRegex, opts.srcExtRegex);
 }
 int main(int argc, char* argv[]) {
   try {

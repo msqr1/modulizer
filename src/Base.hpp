@@ -1,11 +1,13 @@
 #pragma once
 #include <source_location>
 #include <cstdlib>
+#include <filesystem>
 #include "../3rdParty/fmt/include/fmt/format.h"
 
 namespace modulizer {
 
 extern bool verbose;
+constexpr char pathSeparator{std::filesystem::path::preferred_separator};
 size_t rtnSize(char* _, size_t size);
 
 template <typename... T> struct exitWithErr {
@@ -16,7 +18,7 @@ template <typename... T> struct exitWithErr {
   // Overload for indirect callers (ie. calling from an error handling function). Custom source location is here to give correct error location
   [[noreturn]] exitWithErr(const std::source_location& loc, fmt::format_string<T...> fmt, T&&... args) {
     std::string_view filename = loc.file_name();
-    filename = filename.substr(filename.find_last_of("/\\") + 1);
+    filename.remove_prefix(filename.find_last_of(pathSeparator));
     fmt::print("Exception thrown at {}({}:{}): ", filename, loc.line(), loc.column());
     fmt::println(fmt, std::forward<T>(args)...);
     std::exit(1);

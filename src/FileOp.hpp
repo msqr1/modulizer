@@ -1,6 +1,6 @@
+#pragma once
 #include "Base.hpp"
 #include "Regex.hpp"
-#include <filesystem>
 #include <vector>
 
 namespace modulizer {

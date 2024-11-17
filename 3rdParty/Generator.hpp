@@ -4,6 +4,7 @@
 
 // Can't use Setup.cmake for this because I modified it
 ///////////////////////////////////////////////////////////////////////////////
+#pragma once
 #include <coroutine>
 #include <exception>
 #include <iterator>
