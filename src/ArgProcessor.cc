@@ -1,6 +1,8 @@
 #include "Base.hpp"
 #include "ArgProcessor.hpp"
 #include "../3rdParty/fmt/include/fmt/format.h"
+#define TOML_EXCEPTIONS 0
+#define TOML_ENABLE_FORMATTERS 0
 #include "../3rdParty/toml++/include/toml++/toml.hpp"
 
 namespace modulizer {

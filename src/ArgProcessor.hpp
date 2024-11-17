@@ -19,6 +19,3 @@ struct Opts {
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose);
 
 } // namespace modulizer
-
-#define TOML_EXCEPTIONS 0
-#define TOML_ENABLE_FORMATTERS 0
