@@ -1,5 +1,6 @@
 #include "Base.hpp"
 #include <vector>
+
 namespace modulizer {
 
 enum FileType {

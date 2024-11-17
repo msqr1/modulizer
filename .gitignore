@@ -4,5 +4,6 @@ src-old
 src/modulizer
 3rdParty/*
 !3rdParty/Setup.cmake
+!3rdParty/Generator.hpp
 build
 CMakePresets.json

@@ -1,34 +1,56 @@
 #include "Regex.hpp"
 #include "Base.hpp"
+
 namespace modulizer::re {
 
-void ckStatus(int status, const std::source_location& loc = std::source_location::current()) {
-  // Match status OK || Compile status OK
-  if(status == 0 || status == 100) return;
+void ckErr(int status, const std::source_location& loc = std::source_location::current()) {
+  // Code inside this range is OK
+  if(status > -2 && status < 101) return;
   char errMsg[256];
   pcre2_get_error_message(status, reinterpret_cast<PCRE2_UCHAR*>(errMsg), 256);
   exitWithErr(loc, "Regex error: {}", errMsg);
 }
 
-Pattern::Pattern(std::string_view pattern, uint32_t opts) {
+Capture::Capture(size_t start, size_t end) : start{start}, end{end} {}
+
+Captures::Captures(size_t *ovector): ovector{ovector} {}
+Capture Captures::operator[](int idx) {
+  // ovector comes in pairs of (start, end), so multiply by 2 to get correct index
+  idx *= 2;
+  return Capture{ovector[idx], ovector[idx + 1]};
+}
+
+Pattern::Pattern(std::string_view pat, uint32_t opts) {
   int status;
   size_t _; // Unused
-  pat = pcre2_compile(reinterpret_cast<PCRE2_SPTR>(pattern.data()), pattern.length(), opts, &status, &_, nullptr);
-  ckStatus(status);
-  status = pcre2_jit_compile(pat, PCRE2_JIT_COMPLETE);
-  ckStatus(status);
+  pattern = pcre2_compile(reinterpret_cast<PCRE2_SPTR>(pat.data()), pat.length(), opts, &status, &_, nullptr);
+  ckErr(status);
+  status = pcre2_jit_compile(pattern, PCRE2_JIT_COMPLETE);
+  ckErr(status);
+  matchData = pcre2_match_data_create_from_pattern(pattern, nullptr);
+  if(matchData == nullptr) exitWithErr("Regex error: Unable to allocate memory for match");
 }
 Pattern::~Pattern() {
-  log("Dtor called");
-  //pcre2_code_free(pat);
+  pcre2_code_free(pattern);
+  pcre2_match_data_free(matchData);
+}
+std::optional<Captures> Pattern::match(std::string_view subject, size_t startOffset, uint32_t opts) {
+  int count{pcre2_jit_match(pattern, reinterpret_cast<PCRE2_SPTR>(subject.data()), subject.length(), startOffset, opts, matchData, nullptr)};
+  ckErr(count);
+  if(count < 1) return std::nullopt;
+  return Captures{pcre2_get_ovector_pointer(matchData)};
+}
+std::optional<Captures> Pattern::match(std::string_view subject, uint32_t opts) {
+  return match(subject, 0, opts);
+}
+std::generator<Captures> Pattern::matchAll(std::string_view subject, uint32_t opts) {
+  size_t startOffset;
+  while(std::optional<Captures> maybeCaptures{match(subject, startOffset, opts)}) {
+    Captures& captures{*maybeCaptures};
+    startOffset = captures.ovector[1];
+    co_yield captures;
+  }
+  co_return;
 }
 
-void match(const Pattern& pattern, std::string_view subject, uint32_t opts) {
-  int status;
-  pcre2_match_data* md;
-  status = pcre2_jit_match(pattern.pat, reinterpret_cast<PCRE2_SPTR>(subject.data()), subject.length(), 0, opts, md, nullptr);
-  ckStatus(status);
-  //pcre2_match_data_free(md);
-}
-
-}
+} // namespace modulizer::re

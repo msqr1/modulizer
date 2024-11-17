@@ -5,7 +5,6 @@
 #define TOML_ENABLE_FORMATTERS 0
 #include "../3rdParty/toml++/include/toml++/toml.hpp"
 
-
 namespace modulizer {
 
 const char* getOptVal(int& optidx, int argc, char* argv[]) {
@@ -56,4 +55,4 @@ Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   return opts;
 }
 
-}
+} // namespace modulizer

@@ -1,4 +1,5 @@
 #include <string_view>
+
 namespace modulizer {
 
 struct Opts {
@@ -13,4 +14,4 @@ struct Opts {
 };
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose);
 
-}
+} // namespace modulizer
