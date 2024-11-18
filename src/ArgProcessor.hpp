@@ -9,7 +9,7 @@ struct Opts {
   bool merge;
   re::Pattern hdrExtRegex;
   re::Pattern srcExtRegex;
-  std::string_view inDir;
+  std::filesystem::path inDir;
   std::filesystem::path outDir;
   std::string moduleInterfaceExt;
   std::string openExport;

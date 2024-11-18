@@ -17,12 +17,12 @@
 - A CLI tool
 - Input & options:
     - CLI only (flags, one-time settings): 
-        - ```[inDir]``` - Input directory
         -  ```-c --config``` - Path to configuration file (```.toml```), default to ```modulizer.toml```
         -  ```-h --help``` - Print help and exit
         -  ```-v --version``` - Print version and exit
     - ```.toml```-only (modularization settings):
-        - ```outDir``` - Output directory (defaults to input directory)
+        - ```inDir``` - Input directory
+        - ```outDir``` - Output directory
         - ```verbose``` - Enable verbose output (debugging)
         - ```merge``` - Merge declarations and definition into a single entity
         - ```headerExtRegex``` - Header file extension regex

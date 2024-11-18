@@ -5,47 +5,48 @@
 #define TOML_ENABLE_FORMATTERS 0
 #include "../3rdParty/toml++/include/toml++/toml.hpp"
 
+namespace fs = std::filesystem;
 namespace modulizer {
 
-const char* getOptVal(int& optidx, int argc, char* argv[]) {
+const char* getOptVal(int optidx, int argc, char* argv[]) {
   optidx++;
   if(optidx == argc || argv[optidx][0] == '-') 
-    exitWithErr("Invalid value for option {}", argv[optidx - 1]);
+    exitWithErr("Invalid/Nonexistent value for option {}", argv[optidx - 1]);
   return argv[optidx];
 }
-Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
-  if(argc < 2) exitWithErr("No argument specified");
-  Opts opts;
 
+Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
+  Opts opts;
   std::string_view arg, configPath;
-  arg = argv[1];
-  // help or version must be the first argument, else it is inDir
-  if(arg == "-h" || arg == "--help") {
-    log("Modularize C++20 code");
-    std::exit(0);
-  }
-  if(arg == "-v" || arg == "--version") {
-    log("0.0.1");
-    std::exit(0);
-  }
-  opts.inDir = arg;
   configPath = "modulizer.toml";
-  for(int optidx{2}; optidx < argc; ++optidx) {
-    arg = argv[optidx];
-    if(arg == "-c" || arg == "--config") configPath = getOptVal(optidx, argc, argv);
-    else exitWithErr("Invalid option {}", arg);
+  if(argc > 1) {
+    arg = argv[1];
+
+    // Help or version must be the first argument
+    if(arg == "-h" || arg == "--help") {
+      log("Modularize C++20 code");
+      exitOK();
+    }
+    if(arg == "-v" || arg == "--version") {
+      log("0.0.1");
+      exitOK();
+    }
+    if(arg == "-c" || arg == "--config") configPath = getOptVal(1, argc, argv);
   }
   auto parseRes{toml::parse_file(configPath)};
   if(!parseRes) {
     auto err = parseRes.error();
     auto errSrc = err.source();
-  exitWithErr("TOML++ error: {} @ {}({}:{})", err.description(), configPath, errSrc.begin.line, errSrc.begin.column);
+  exitWithErr("TOML++ error: {} at {}({}:{})", err.description(), configPath, errSrc.begin.line, errSrc.begin.column);
   }
   auto config{std::move(parseRes.table())};
-  
-  // Default values
+  opts.inDir = config["inDir"].value_or("");
+  if(opts.inDir.empty()) exitWithErr("inDir must be specified");
   opts.outDir = config["outDir"].value_or("");
-  if(opts.outDir.empty()) exitWithErr("outDir must be specified/valid");
+  if(opts.outDir.empty()) exitWithErr("outDir must be specified");
+  //exitWithErr("inDir and outDir cannot be the same");
+
+  // Default values
   verbose = config["verbose"].value_or(false);
   opts.merge = config["merge"].value_or(false);
   std::string_view hdrExtRegexStr{config["headerExtRegex"].value_or(R"(\.h(?:pp|xx)?)")};
@@ -55,8 +56,7 @@ Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   opts.moduleInterfaceExt = config["moduleInterfaceExt"].value_or(".cppm");
   opts.openExport = config["openExport"].value_or("export {\n");
   opts.closeExport = config["closeExport"].value_or("}\n");
-
-  logIfVerbose("merge = {}\ninDir = {}\noutDir = {}\nhdrExtRegex = {}\nsrcExtRegex = {}\nmoduleInterfaceExt = {}\nopenExport = {}\ncloseExport = {}", opts.merge, opts.inDir, opts.outDir.c_str(), hdrExtRegexStr, srcExtRegexStr, opts.moduleInterfaceExt, opts.openExport, opts.closeExport);
+  logIfVerbose("merge = {}\ninDir = {}\noutDir = {}\nhdrExtRegex = {}\nsrcExtRegex = {}\nmoduleInterfaceExt = {}\nopenExport = {}\ncloseExport = {}", opts.merge, opts.inDir.c_str(), opts.outDir.c_str(), hdrExtRegexStr, srcExtRegexStr, opts.moduleInterfaceExt, opts.openExport, opts.closeExport);
   
   // Implicit move construction
   return opts;

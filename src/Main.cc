@@ -9,15 +9,16 @@ using namespace modulizer;
 
 void run(int argc, char* argv[]) {
   Opts opts{getOptsOrExit(argc, argv, verbose)};
-  readFiles(opts.inDir, opts.hdrExtRegex, opts.srcExtRegex);
+  //readFiles(opts.inDir.c_str(), opts.hdrExtRegex, opts.srcExtRegex);
 }
 int main(int argc, char* argv[]) {
   try {
     run(argc, argv);
-    return 0;
   }
   catch(const std::exception& exc) {
     log("{}", exc.what());
   }
-  return 1;
+  catch(int exitCode) {
+    return exitCode;
+  }
 }

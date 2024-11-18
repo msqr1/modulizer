@@ -10,18 +10,21 @@ extern bool verbose;
 constexpr char pathSeparator{std::filesystem::path::preferred_separator};
 size_t rtnSize(char* _, size_t size);
 
+[[noreturn]] void exitOK();
 template <typename... T> struct exitWithErr {
+
   // Overload for direct callers, source location is implied
   exitWithErr(fmt::format_string<T...> fmt, T&&... args, const std::source_location& loc = std::source_location::current()) {
     exitWithErr(loc, fmt, std::forward<T>(args)...);
   }
+  
   // Overload for indirect callers (ie. calling from an error handling function). Custom source location is here to give correct error location
   [[noreturn]] exitWithErr(const std::source_location& loc, fmt::format_string<T...> fmt, T&&... args) {
-    std::string_view filename = loc.file_name();
+    std::string_view filename{loc.file_name()};
     filename.remove_prefix(filename.find_last_of(pathSeparator));
     fmt::print("Exception thrown at {}({}:{}): ", filename, loc.line(), loc.column());
     fmt::println(fmt, std::forward<T>(args)...);
-    std::exit(1);
+    throw EXIT_FAILURE;
   }  
 };
 template <typename... T> exitWithErr(fmt::format_string<T...> fmt, T&&...) -> exitWithErr<T...>;
