@@ -1,9 +1,12 @@
 #pragma once
-#define PCRE2_CODE_UNIT_WIDTH 8
-#include "../3rdParty/pcre2/src/pcre2.h.generic"
-#include "../3rdParty/Generator.hpp"
 #include <string_view>
 #include <optional>
+
+class pcre2_real_code_8;
+class pcre2_real_match_data_8;
+namespace cppcoro {
+  template<typename T> class generator;
+}
 
 namespace modulizer::re {
 
@@ -22,15 +25,14 @@ friend class Pattern;
   size_t* ovector;
   Captures(const Captures&) = delete;
   Captures& operator=(const Captures&) = delete;
-
 public:
   Captures(size_t* ovector);
   Capture operator[](int idx);
 };
 
 class Pattern {
-  pcre2_code* pattern;
-  pcre2_match_data* matchData;
+  pcre2_real_code_8* pattern;
+  pcre2_real_match_data_8* matchData;
 
   void free();
 public:
@@ -43,13 +45,9 @@ public:
 
   void set(std::string_view pat, uint32_t opts = 0);
 
-  // Base implementation
-  std::optional<Captures> match(std::string_view subject, size_t startoffset, uint32_t opts = 0);
-  // Match with startoffset = 0
-  std::optional<Captures> match(std::string_view subject, uint32_t opts = 0);
+  std::optional<Captures> match(std::string_view subject, uint32_t opts = 0, size_t startOffset = 0);
 
-  // Get all matches in the string
-  cppcoro::generator<Captures> matchAll(std::string_view subject, uint32_t opts = 0);
+  cppcoro::generator<Captures> matchAll(std::string_view subject, uint32_t opts = 0, size_t startOffset = 0);
 };
 
 } // namespace modulizer::re

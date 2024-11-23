@@ -1,5 +1,8 @@
 #include "Regex.hpp"
 #include "Base.hpp"
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include "../3rdParty/pcre2/src/pcre2.h.generic"
+#include "../3rdParty/Generator.hpp"
 
 namespace modulizer::re {
 
@@ -47,18 +50,15 @@ void Pattern::set(std::string_view pat, uint32_t opts) {
   matchData = pcre2_match_data_create_from_pattern(pattern, nullptr);
   if(matchData == nullptr) exitWithErr("Regex error: Unable to allocate memory for match");
 }
-std::optional<Captures> Pattern::match(std::string_view subject, size_t startOffset, uint32_t opts) {
+std::optional<Captures> Pattern::match(std::string_view subject, uint32_t opts, size_t startOffset) {
   int count{pcre2_jit_match(pattern, reinterpret_cast<PCRE2_SPTR>(subject.data()), subject.length(), startOffset, opts, matchData, nullptr)};
   ckErr(count);
   if(count < 1) return std::nullopt;
+
   return pcre2_get_ovector_pointer(matchData);
 }
-std::optional<Captures> Pattern::match(std::string_view subject, uint32_t opts) {
-  return match(subject, 0, opts);
-}
-cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, uint32_t opts) {
-  size_t startOffset{};
-  while(std::optional<Captures> maybeCaptures{match(subject, startOffset, opts)}) {
+cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, uint32_t opts, size_t startOffset) {
+  while(std::optional<Captures> maybeCaptures{match(subject, opts, startOffset)}) {
     Captures& captures{*maybeCaptures};
     startOffset = captures.ovector[1];
     co_yield captures;

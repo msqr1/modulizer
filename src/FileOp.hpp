@@ -1,9 +1,12 @@
 #pragma once
 #include "Base.hpp"
-#include "Regex.hpp"
 #include <vector>
 
 namespace modulizer {
+  
+namespace re {
+  class Pattern;
+}
 
 enum FileType {
   HeaderOrModuleIf,

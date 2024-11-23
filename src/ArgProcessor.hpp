@@ -1,7 +1,7 @@
 #pragma once
 #include "Regex.hpp"
 #include <filesystem>
-#include <string_view>
+#include <string>
 
 namespace modulizer {
 

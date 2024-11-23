@@ -1,4 +1,5 @@
 #include "FileOp.hpp"
+#include "Regex.hpp"
 #include <fstream>
 
 namespace fs = std::filesystem;
