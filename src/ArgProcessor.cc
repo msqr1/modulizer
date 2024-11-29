@@ -6,7 +6,6 @@
 #include "../3rdParty/toml++/include/toml++/toml.hpp"
 
 namespace fs = std::filesystem;
-namespace modulizer {
 
 const char* getOptVal(int optidx, int argc, char* argv[]) {
   optidx++;
@@ -61,5 +60,3 @@ Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   // Implicit move construction
   return opts;
 }
-
-} // namespace modulizer

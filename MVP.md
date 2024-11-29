@@ -24,7 +24,6 @@
         - ```inDir``` - Input directory
         - ```outDir``` - Output directory
         - ```verbose``` - Enable verbose output (debugging)
-        - ```merge``` - Merge declarations and definition into a single entity
         - ```headerExtRegex``` - Header file extension regex
         - ```sourceExtRegex``` - Source file extension regex
         - ```moduleInterfaceExt``` - Module interface unit file extension
@@ -32,7 +31,6 @@
         - ```closeExport``` - Syntax for closing an export section
     - Default values for ```.toml```-only settings:
         - verbose: ```false``` [boolean]
-        - merge: ```false``` [boolean]
         - outDir: (same as ```inDir```) [string]
         - headerExtRegex: ```"\.h(pp|xx)?"``` [string]
         - sourceExtRegex: ```"\.c(pp|c|xx)"``` [string]
@@ -50,10 +48,10 @@
 
 ## Code input requirement
 - Valid standard C++20
-- Headers must not define macros that affect other files
-- Declarations in one header must have their definitions in one source with the same base name
+- Headers must not define macros that affect other files,
 
-## Maybe in the future
+## Maybe in the future (post MVP)
+- Merging source and header
 - Dependency analysis
 - Parallel execution
 - Build system integration

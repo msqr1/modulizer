@@ -2,8 +2,6 @@
 #include "../3rdParty/fmt/include/fmt/format.h"
 #include <source_location>
 
-namespace modulizer {
-
 extern bool verbose;
 constexpr char pathSeparator{std::filesystem::path::preferred_separator};
 size_t rtnSize(char* _, size_t size);
@@ -34,5 +32,3 @@ template <typename... T> void log(fmt::format_string<T...> fmt, T&&... args) {
 template <typename... T> void logIfVerbose(fmt::format_string<T...> fmt, T&&... args) {
   if(verbose) log(fmt, std::forward<T>(args)...);
 }
-
-} // namespace modulizer

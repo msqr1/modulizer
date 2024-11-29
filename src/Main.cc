@@ -5,8 +5,6 @@
 #include "Modularizer.hpp"
 #include "Exporter.hpp"
 
-using namespace modulizer;
-
 void run(int argc, char* argv[]) {
   Opts opts{getOptsOrExit(argc, argv, verbose)};
   //readFiles(opts.inDir.c_str(), opts.hdrExtRegex, opts.srcExtRegex);

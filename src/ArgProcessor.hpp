@@ -3,8 +3,6 @@
 #include <filesystem>
 #include <string>
 
-namespace modulizer {
-
 struct Opts {
   bool merge;
   re::Pattern hdrExtRegex;
@@ -17,5 +15,3 @@ struct Opts {
 };
 
 Opts getOptsOrExit(int argc, char* argv[], bool& verbose);
-
-} // namespace modulizer

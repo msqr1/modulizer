@@ -3,7 +3,6 @@
 #include <fstream>
 
 namespace fs = std::filesystem;
-namespace modulizer {
 
 std::vector<File> readFiles(std::string_view inDir, re::Pattern& hdrExtRegex, re::Pattern& srcExtRegex) {
   std::vector<File> files;
@@ -28,5 +27,3 @@ std::vector<File> readFiles(std::string_view inDir, re::Pattern& hdrExtRegex, re
   }
   return files;
 }
-
-} // namespace modulizer

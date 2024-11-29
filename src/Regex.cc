@@ -4,7 +4,7 @@
 #include "../3rdParty/pcre2/src/pcre2.h.generic"
 #include "../3rdParty/Generator.hpp"
 
-namespace modulizer::re {
+namespace re {
 
 void ckErr(int status, const std::source_location& loc = std::source_location::current()) {
   // Code inside this range is OK
@@ -66,4 +66,4 @@ cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, uint32_
   co_return;
 }
 
-} // namespace modulizer::re
+} // namespace re

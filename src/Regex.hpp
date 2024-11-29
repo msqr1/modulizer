@@ -8,7 +8,7 @@ namespace cppcoro {
   template<typename T> class generator;
 }
 
-namespace modulizer::re {
+namespace re {
 
 class Capture {
 friend class Captures;
@@ -50,5 +50,5 @@ public:
   cppcoro::generator<Captures> matchAll(std::string_view subject, uint32_t opts = 0, size_t startOffset = 0);
 };
 
-} // namespace modulizer::re
+} // namespace re
 

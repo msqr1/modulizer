@@ -2,8 +2,6 @@
 #include "Base.hpp"
 #include <vector>
 
-namespace modulizer {
-  
 namespace re {
   class Pattern;
 }
@@ -22,5 +20,3 @@ struct File {
 
 std::vector<File> readFiles(std::string_view inDir, re::Pattern& hdrExtRegex, re::Pattern& srcExtRegex);
 void writeFiles(std::string_view outDir, const std::vector<File>& files);
-
-} // namespace modulizer
