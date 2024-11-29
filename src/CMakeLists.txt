@@ -12,7 +12,7 @@ execute_process(
   COMMAND cmake -P Setup.cmake
 )
 
-add_executable(modulizer Base.cc Regex.cc ArgProcessor.cc FileOp.cc Merger.cc Exporter.cc Modularizer.cc Main.cc) 
+add_executable(modulizer Base.cc Regex.cc ArgProcessor.cc FileOp.cc Exporter.cc Modularizer.cc Main.cc) 
 target_compile_features(modulizer PUBLIC cxx_std_23)
 target_compile_options(modulizer PUBLIC -Wno-deprecated-literal-operator)
 

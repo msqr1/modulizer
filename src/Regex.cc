@@ -6,7 +6,7 @@
 
 namespace re {
 
-void ckErr(int status, const std::source_location& loc = std::source_location::current()) {
+void ckPCRE2Code(int status, const std::source_location& loc = std::source_location::current()) {
   // Code inside this range is OK
   if(status > -2 && status < 101) return;
   char errMsg[256];
@@ -44,15 +44,15 @@ void Pattern::set(std::string_view pat, uint32_t opts) {
   int status;
   size_t _; // Unused
   pattern = pcre2_compile(reinterpret_cast<PCRE2_SPTR>(pat.data()), pat.length(), opts, &status, &_, nullptr);
-  ckErr(status);
+  ckPCRE2Code(status);
   status = pcre2_jit_compile(pattern, PCRE2_JIT_COMPLETE);
-  ckErr(status);
+  ckPCRE2Code(status);
   matchData = pcre2_match_data_create_from_pattern(pattern, nullptr);
   if(matchData == nullptr) exitWithErr("Regex error: Unable to allocate memory for match");
 }
 std::optional<Captures> Pattern::match(std::string_view subject, uint32_t opts, size_t startOffset) {
   int count{pcre2_jit_match(pattern, reinterpret_cast<PCRE2_SPTR>(subject.data()), subject.length(), startOffset, opts, matchData, nullptr)};
-  ckErr(count);
+  ckPCRE2Code(count);
   if(count < 1) return std::nullopt;
 
   return pcre2_get_ovector_pointer(matchData);

@@ -1,22 +1,24 @@
 #pragma once
 #include "Base.hpp"
 #include <vector>
+#include <filesystem>
 
 namespace re {
   class Pattern;
 }
+namespace cppcoro {
+  template<typename T> class generator;
+}
+struct Opts;
 
 enum FileType {
-  HeaderOrModuleIf,
+  Header,
   Source,
-  ModuleImpl
 };
 
 struct File {
   FileType type;
-  std::filesystem::path relPath;
   std::string content;
 };
 
-std::vector<File> readFiles(std::string_view inDir, re::Pattern& hdrExtRegex, re::Pattern& srcExtRegex);
-void writeFiles(std::string_view outDir, const std::vector<File>& files);
+cppcoro::generator<File&> iterateFiles(Opts& opts);

@@ -1,13 +1,15 @@
 #include "Base.hpp"
 #include "ArgProcessor.hpp"
 #include "FileOp.hpp"
-#include "Merger.hpp"
 #include "Modularizer.hpp"
 #include "Exporter.hpp"
+#include "../3rdParty/Generator.hpp"
 
 void run(int argc, char* argv[]) {
   Opts opts{getOptsOrExit(argc, argv, verbose)};
-  //readFiles(opts.inDir.c_str(), opts.hdrExtRegex, opts.srcExtRegex);
+  for(File& file : iterateFiles(opts)) {
+    // Process the files
+  }
 }
 int main(int argc, char* argv[]) {
   try {

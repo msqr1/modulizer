@@ -4,7 +4,6 @@
 #include <string>
 
 struct Opts {
-  bool merge;
   re::Pattern hdrExtRegex;
   re::Pattern srcExtRegex;
   std::filesystem::path inDir;
