@@ -21,7 +21,7 @@ set(3rdPartyHeaders Generator.hpp toml++/include/toml++/toml.hpp fmt/include/fmt
 list(TRANSFORM 3rdPartyHeaders PREPEND "../3rdParty/")
 
 # Project headers that should not be changed frequently
-set(stableHeaders Base.hpp)
+set(stableHeaders Base.hpp Regex.hpp)
 foreach(header IN LISTS 3rdPartyHeaders stableHeaders)
   target_precompile_headers(modulizer PUBLIC ${header})
 endforeach()

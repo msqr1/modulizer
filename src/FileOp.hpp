@@ -21,4 +21,4 @@ struct File {
   std::string content;
 };
 
-cppcoro::generator<File&> iterateFiles(Opts& opts);
+cppcoro::generator<File&> iterateFiles(const Opts& opts);

@@ -8,7 +8,7 @@
 void run(int argc, char* argv[]) {
   Opts opts{getOptsOrExit(argc, argv, verbose)};
   for(File& file : iterateFiles(opts)) {
-    // Process the files
+    addExports(file.content, opts);
   }
 }
 int main(int argc, char* argv[]) {

@@ -45,9 +45,9 @@ public:
 
   void set(std::string_view pat, uint32_t opts = 0);
 
-  std::optional<Captures> match(std::string_view subject, uint32_t opts = 0, size_t startOffset = 0);
+  std::optional<Captures> match(std::string_view subject, uint32_t opts = 0, size_t startOffset = 0) const;
 
-  cppcoro::generator<Captures> matchAll(std::string_view subject, uint32_t opts = 0, size_t startOffset = 0);
+  cppcoro::generator<Captures> matchAll(std::string_view subject, uint32_t opts = 0, size_t startOffset = 0) const;
 };
 
 } // namespace re

@@ -6,20 +6,26 @@
 
 namespace fs = std::filesystem;
 
-cppcoro::generator<File&> iterateFiles(Opts& opts) {
+cppcoro::generator<File&> iterateFiles(const Opts& opts) {
   size_t prefixLen = opts.inDir.native().length() + 1;
   File file;
   fs::path path;
   std::string_view pathView;
   std::ifstream ifs;
   std::ofstream ofs;
+  logIfVerbose("Scanning input directory...");
   for(const auto& ent : fs::recursive_directory_iterator(opts.inDir)) {
     path = ent.path();
+    logIfVerbose("Current file: {}", path.native());
     pathView = path.extension().native();
     if(opts.hdrExtRegex.match(pathView)) file.type = FileType::Header;
     else if(opts.srcExtRegex.match(pathView)) file.type = FileType::Source;
-    else continue;
+    else {
+      logIfVerbose("Is ignored, not header/source");
+      continue;
+    }
 
+    logIfVerbose("Is a header/source, trying to read...");
     ifs.open(path);
     if(!ifs) exitWithErr("Unable to open {} for reading", path.native());
     size_t fileSize{fs::file_size(path)};
@@ -29,6 +35,7 @@ cppcoro::generator<File&> iterateFiles(Opts& opts) {
     ifs.close();
     co_yield file;
 
+    logIfVerbose("Trying to write...");
     if(file.type == FileType::Header) path.replace_extension(opts.moduleInterfaceExt);
     pathView = path.native();
     pathView.remove_prefix(prefixLen);
