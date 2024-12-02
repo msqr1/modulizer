@@ -16,14 +16,16 @@ void ckPCRE2Code(int status, const std::source_location& loc = std::source_locat
 
 Capture::Capture(size_t start, size_t end) : start{start}, end{end} {}
 
-Captures::Captures(size_t *ovector): ovector{ovector} {}
-Capture Captures::operator[](int idx) {
+Captures::Captures(size_t* ovector, int pairCnt): ovector{ovector}, pairCnt{pairCnt} {}
+Capture Captures::operator[](int idx) const {
+  if(idx >= pairCnt) exitWithErr("Regex error: Out of bound capture access");
+  
   // ovector comes in pairs of (start, end), so multiply by 2 to get correct index
   idx *= 2;
-  return Capture{ovector[idx], ovector[idx + 1]};
+  return {ovector[idx], ovector[idx + 1]};
 }
 
-Pattern::Pattern(): pattern{nullptr}, matchData{nullptr} {}
+Pattern::Pattern() {}
 Pattern::Pattern(Pattern&& other): pattern{other.pattern}, matchData{other.matchData} {
   other.pattern = nullptr;
   other.matchData = nullptr;
@@ -50,15 +52,15 @@ void Pattern::set(std::string_view pat, uint32_t opts) {
   matchData = pcre2_match_data_create_from_pattern(pattern, nullptr);
   if(matchData == nullptr) exitWithErr("Regex error: Unable to allocate memory for match");
 }
-std::optional<Captures> Pattern::match(std::string_view subject, uint32_t opts, size_t startOffset) const {
+std::optional<Captures> Pattern::match(std::string_view subject, size_t startOffset, uint32_t opts) const {
   int count{pcre2_jit_match(pattern, reinterpret_cast<PCRE2_SPTR>(subject.data()), subject.length(), startOffset, opts, matchData, nullptr)};
   ckPCRE2Code(count);
   if(count < 1) return std::nullopt;
-  return pcre2_get_ovector_pointer(matchData);
+  return std::make_optional<Captures>(pcre2_get_ovector_pointer(matchData), count);
 }
-cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, uint32_t opts, size_t startOffset) const {
-  while(std::optional<Captures> maybeCaptures{match(subject, opts, startOffset)}) {
-    Captures& captures{*maybeCaptures};
+cppcoro::generator<const Captures&> Pattern::matchAll(std::string_view subject, size_t startOffset, uint32_t opts) const {
+  while(std::optional<Captures> maybeCaptures{match(subject, startOffset, opts)}) {
+    const Captures& captures{*maybeCaptures};
     startOffset = captures.ovector[1];
     co_yield captures;
   }

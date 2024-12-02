@@ -22,17 +22,18 @@ public:
 
 class Captures {
 friend class Pattern;
-  size_t* ovector;
+  int pairCnt;
+  size_t* ovector{nullptr};
   Captures(const Captures&) = delete;
   Captures& operator=(const Captures&) = delete;
 public:
-  Captures(size_t* ovector);
-  Capture operator[](int idx);
+  Captures(size_t* ovector, int pairCnt);
+  Capture operator[](int idx) const;
 };
 
 class Pattern {
-  pcre2_real_code_8* pattern;
-  pcre2_real_match_data_8* matchData;
+  pcre2_real_code_8* pattern{nullptr};
+  pcre2_real_match_data_8* matchData{nullptr};
 
   void free();
 public:
@@ -45,9 +46,9 @@ public:
 
   void set(std::string_view pat, uint32_t opts = 0);
 
-  std::optional<Captures> match(std::string_view subject, uint32_t opts = 0, size_t startOffset = 0) const;
+  std::optional<Captures> match(std::string_view subject, size_t startOffset = 0, uint32_t opts = 0) const;
 
-  cppcoro::generator<Captures> matchAll(std::string_view subject, uint32_t opts = 0, size_t startOffset = 0) const;
+  cppcoro::generator<const Captures&> matchAll(std::string_view subject, size_t startOffset = 0, uint32_t opts = 0) const;
 };
 
 } // namespace re
