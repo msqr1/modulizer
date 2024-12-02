@@ -1,6 +1,7 @@
 #pragma once
 #include "../3rdParty/fmt/include/fmt/format.h"
 #include <source_location>
+#include <filesystem>
 
 extern bool verbose;
 constexpr char pathSeparator{std::filesystem::path::preferred_separator};
@@ -20,7 +21,7 @@ template <typename... T> struct exitWithErr {
     filename.remove_prefix(filename.find_last_of(pathSeparator));
     fmt::print("Exception thrown at {}({}:{}): ", filename, loc.line(), loc.column());
     fmt::println(fmt, std::forward<T>(args)...);
-    throw EXIT_FAILURE;
+    throw 1;
   }  
 };
 template <typename... T> exitWithErr(fmt::format_string<T...> fmt, T&&...) -> exitWithErr<T...>;

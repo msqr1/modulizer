@@ -26,7 +26,10 @@ foreach(header IN LISTS 3rdPartyHeaders stableHeaders)
   target_precompile_headers(modulizer PUBLIC ${header})
 endforeach()
 
-set(BUILD_SHARED_LIBS on)
+# For some reason dumb reasons, PCRE2 setting a cached BUILD_SHARED_LIBS like so:
+# SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries.")
+# will override my set(BUILD_SHARED_LIBS on) when building the first time because normal variables should override cached ones. In this case, it just doesn't work???
+set(BUILD_SHARED_LIBS on CACHE BOOL "Build shared libraries.")
 
 add_subdirectory(../3rdParty/fmt "${CMAKE_BINARY_DIR}/fmt")
 target_link_libraries(modulizer fmt::fmt)
@@ -38,10 +41,13 @@ target_link_libraries(modulizer tomlplusplus::tomlplusplus)
 
 set(PCRE2_BUILD_TESTS off)
 set(PCRE2_BUILD_PCRE2GREP off)
-set(BUILD_STATIC_LIBS off)
 set(PCRE2_SUPPORT_JIT on)
-add_subdirectory(../3rdParty/pcre2  "${CMAKE_BINARY_DIR}/pcre2")
-target_link_libraries(modulizer pcre2-8-shared)
+set(BUILD_STATIC_LIBS off)
+
+# Another fix for PCRE2, it uses option() for default values with CMAKE < 3.12, so it just override my variables above
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+add_subdirectory(../3rdParty/pcre2 "${CMAKE_BINARY_DIR}/pcre2")
+target_link_libraries(modulizer pcre2-8)
 
 
 
