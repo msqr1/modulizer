@@ -9,7 +9,7 @@
 void matchBrace(size_t& pos, std::string_view str) {
   int nest{1};
   while(nest) {
-    switch(str[pos++]) {
+    switch(str[++pos]) {
     case '{':
       nest++;
       break;
@@ -19,33 +19,28 @@ void matchBrace(size_t& pos, std::string_view str) {
   }
 }
 
-struct Scope {
+struct Export {
   size_t start;
   size_t end;
-  Scope(size_t start, size_t end): start{start}, end{end} {};
-  Scope() {};
-
-  // For convenience
-  Scope& operator=(re::Capture capture) {
-    start = capture.start;
-    end = capture.end;
-    return *this;
-  }
-  
 };
 
-// Export have a start and an end, just like a scope block, so I just alias it.
-using Export = Scope;
+struct DeclScope {
+  size_t declStart;
+  size_t start;
+
+  // For searching
+  size_t startOffset{};
+  size_t end;
+};
 
 // Exports for everything but static unions and anonymous namespace (sorry I can't think of a better name for this)
 void getExports1(std::string_view content) {
 
   // Matches namespace or UNNAMED union. Capture the "s" in static to try testing if the union is static or not. Capture the "u" to see if it is a namespace or union.
   re::Pattern pat{R"((?:(?:(s)tatic|inline)\s++)?(?:(u)nion\s*|namespace([^\{]*))\{)"};
-  std::stack<Scope> stack;
+  std::stack<DeclScope> stack;
   stack.emplace(0, content.size());
-  Scope parent;
-  Scope self;
+  DeclScope self;
   std::string_view toMatch;
   std::optional<re::Captures> maybeCaptures;
   re::Captures captures;
@@ -54,50 +49,53 @@ void getExports1(std::string_view content) {
   // std::string::find* for not found return a -1 size_t  
   size_t notFound{static_cast<size_t>(-1)};
   while(!stack.empty()) {
-    parent = stack.top();
+    DeclScope& parent = stack.top();
     toMatch = content.substr(0, parent.end);
-    if((maybeCaptures = pat.match(toMatch, 0, parent.start))) {
+    if((maybeCaptures = pat.match(toMatch, parent.start + parent.startOffset))) {
       captures = *maybeCaptures;
-      for(int i = 0; i < 4; i++) {
-        log("{}, {}", captures[i].start, captures[i].end);
-      }
-      self = captures[0];
+      self.declStart = captures[0].start;
+      self.start = self.end = captures[0].end;
       matchBrace(self.end, toMatch);
-
+      
       // If this is a union (seeing if the captured "u" is there)
       bool isUnion{captures[2].start != notFound};
-      bool isStaticUnion{isUnion && (
+      bool isStaticUnion;
+      if(isUnion) {
+        size_t unionDeclEnd{toMatch.find(';', self.end + 1)};
 
-        // check if "static" is in the front (seeing if the captured "s" is there)
-        captures[1].start != notFound ||
-        toMatch.substr(self.end, toMatch.find(';') + 1).contains("static")
-      )};
+        // Check if "static" is in the front (seeing if the captured "s" is there)
+        isStaticUnion = captures[1].start != notFound || toMatch.substr(self.end + 1, unionDeclEnd).contains("static");
+        self.end = unionDeclEnd;
+      }
       re::Capture NSCapture{captures[3]};
       bool isUnnamedNS{!isUnion &&
 
         // Check if the namespace name consists of only whitespace
         toMatch.substr(NSCapture.start, NSCapture.end - NSCapture.start).find_first_not_of(" \n\t") == notFound
       };
-      if(isStaticUnion || isUnnamedNS) {
-        // Export from parent.start to self.start
-        // Move parent.start to self.end
-      }
-
+      
       // Unnamed union variable (union {...} var;)
-      else if(isUnion && !isStaticUnion) {
-        // How do I ignore this and keep parsing like nothing happened ???
+      if(isUnion && !isStaticUnion) {
+        parent.startOffset = self.end - parent.start + 1;
       }
       
-      // Named namespace
+      // Namespace or static union
       else {
-        // Export from parent.start to self.start
-        // Move parent.start to self.end
+        log("1. Exporting: {}", toMatch.substr(parent.start, self.declStart - parent.start));
+        parent.start = self.end + 1;
+        parent.startOffset = 0;
+
+        // Named namespace, if we only do !isUnnamedNS, a union will also not count as a namespace, so isUnnamedNS will be false and condition execute
+        if(!(isUnion || isUnnamedNS)) {
+          stack.emplace(self);
+        }
       }
     }
-    
+
     // No match (no more to export)
     else {
-      // Export from self.start to self.end
+      // TODO: Fix end index behavior
+      log("2. Exporting: {}", toMatch.substr(parent.start, parent.end - parent.start));
       stack.pop();
     }
   }
