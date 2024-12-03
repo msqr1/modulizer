@@ -62,7 +62,7 @@ std::optional<Captures> Pattern::match(std::string_view subject, size_t startOff
 }
 cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, size_t startOffset, uint32_t opts) const {
   std::optional<Captures> maybeCaptures;
-  while(maybeCaptures = match(subject, startOffset, opts)) {
+  while((maybeCaptures = match(subject, startOffset, opts))) {
     Captures c{*maybeCaptures};
     startOffset = c.ovector[1];
     co_yield c;

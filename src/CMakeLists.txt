@@ -41,8 +41,8 @@ target_link_libraries(modulizer tomlplusplus::tomlplusplus)
 
 set(PCRE2_BUILD_TESTS off)
 set(PCRE2_BUILD_PCRE2GREP off)
-set(PCRE2_SUPPORT_JIT on)
 set(BUILD_STATIC_LIBS off)
+set(PCRE2_SUPPORT_JIT on CACHE BOOL "PCRE2 JIT")
 
 # Another fix for PCRE2, it uses option() for default values with CMAKE < 3.12, so it just override my variables above
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)

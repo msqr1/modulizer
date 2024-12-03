@@ -81,7 +81,7 @@ void getExports1(std::string_view content) {
       
       // Namespace or static union
       else {
-        log("1. Exporting: {}", toMatch.substr(parent.start, self.declStart - parent.start));
+        log("1. Exporting: {} {}", parent.start, self.declStart - parent.start);
         parent.start = self.end + 1;
         parent.startOffset = 0;
 
@@ -95,7 +95,7 @@ void getExports1(std::string_view content) {
     // No match (no more to export)
     else {
       // TODO: Fix end index behavior
-      log("2. Exporting: {}", toMatch.substr(parent.start, parent.end - parent.start));
+      log("2. Exporting: {} {}", parent.start, parent.end - parent.start);
       stack.pop();
     }
   }
