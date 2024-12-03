@@ -16,10 +16,9 @@ void ckPCRE2Code(int status, const std::source_location& loc = std::source_locat
 
 Capture::Capture(size_t start, size_t end) : start{start}, end{end} {}
 
+Captures::Captures() {}
 Captures::Captures(size_t* ovector, int pairCnt): ovector{ovector}, pairCnt{pairCnt} {}
 Capture Captures::operator[](int idx) const {
-  if(idx >= pairCnt) exitWithErr("Regex error: Out of bound capture access");
-  
   // ovector comes in pairs of (start, end), so multiply by 2 to get correct index
   idx *= 2;
   return {ovector[idx], ovector[idx + 1]};
@@ -27,6 +26,7 @@ Capture Captures::operator[](int idx) const {
 
 Pattern::Pattern() {}
 Pattern::Pattern(Pattern&& other): pattern{other.pattern}, matchData{other.matchData} {
+  other.free();
   other.pattern = nullptr;
   other.matchData = nullptr;
 }
@@ -39,6 +39,8 @@ Pattern::~Pattern() {
 void Pattern::free() {
   pcre2_code_free(pattern);
   pcre2_match_data_free(matchData);
+  pattern = nullptr;
+  matchData = nullptr;
 }
 void Pattern::set(std::string_view pat, uint32_t opts) {
   // Free old pattern
@@ -58,11 +60,12 @@ std::optional<Captures> Pattern::match(std::string_view subject, size_t startOff
   if(count < 1) return std::nullopt;
   return std::make_optional<Captures>(pcre2_get_ovector_pointer(matchData), count);
 }
-cppcoro::generator<const Captures&> Pattern::matchAll(std::string_view subject, size_t startOffset, uint32_t opts) const {
-  while(std::optional<Captures> maybeCaptures{match(subject, startOffset, opts)}) {
-    const Captures& captures{*maybeCaptures};
-    startOffset = captures.ovector[1];
-    co_yield captures;
+cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, size_t startOffset, uint32_t opts) const {
+  std::optional<Captures> maybeCaptures;
+  while(maybeCaptures = match(subject, startOffset, opts)) {
+    Captures c{*maybeCaptures};
+    startOffset = c.ovector[1];
+    co_yield c;
   }
 }
 

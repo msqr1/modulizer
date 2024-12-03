@@ -20,20 +20,22 @@ public:
   size_t end;
 };
 
+// Captures doesn't own anything, it's just a view over the ovector
 class Captures {
 friend class Pattern;
   int pairCnt;
-  size_t* ovector{nullptr};
-  Captures(const Captures&) = delete;
-  Captures& operator=(const Captures&) = delete;
+  size_t* ovector;
 public:
+  Captures();
   Captures(size_t* ovector, int pairCnt);
   Capture operator[](int idx) const;
 };
 
+// Pattern manages pointers, so we will not copy it (like a unique_ptr)
+
 class Pattern {
-  pcre2_real_code_8* pattern{nullptr};
-  pcre2_real_match_data_8* matchData{nullptr};
+  pcre2_real_code_8* pattern{};
+  pcre2_real_match_data_8* matchData{};
 
   void free();
 public:
@@ -48,7 +50,7 @@ public:
 
   std::optional<Captures> match(std::string_view subject, size_t startOffset = 0, uint32_t opts = 0) const;
 
-  cppcoro::generator<const Captures&> matchAll(std::string_view subject, size_t startOffset = 0, uint32_t opts = 0) const;
+  cppcoro::generator<Captures> matchAll(std::string_view subject, size_t startOffset = 0, uint32_t opts = 0) const;
 };
 
 } // namespace re
