@@ -32,6 +32,11 @@ bool onlyWhitespace(std::string_view str, size_t start, size_t end) {
 struct Export {
   size_t start;
   size_t end;
+  const Export& set(size_t start, size_t end) {
+    this->start = start;
+    this->end = end;
+    return *this;
+  }
 };
 
 struct DeclScope {
@@ -48,8 +53,9 @@ struct DeclScope {
 
 // Exports for everything but static unions and anonymous namespace 
 // (sorry I can't think of a better name for this)
-cppcoro::generator<Export> getExports1(std::string_view content) {
-
+cppcoro::generator<const Export&> getExports1(std::string_view content) {
+  Export rtn;
+  
   // Matches namespace or UNNAMED union. Capture the "s" in static to try testing if the
   // union is static or not. Capture the "u" to see if it is a namespace or union.
   re::Pattern pat{R"((?:(?:(s)tatic|inline)\s++)?(?:(u)nion\s*|namespace([^\{]*))\{)"};
@@ -59,7 +65,6 @@ cppcoro::generator<Export> getExports1(std::string_view content) {
   std::string_view toMatch;
   std::optional<re::Captures> maybeCaptures;
   re::Captures captures;
-
   while(!stack.empty()) {
     DeclScope& parent = stack.top();
     toMatch = content.substr(0, parent.end);
@@ -78,7 +83,7 @@ cppcoro::generator<Export> getExports1(std::string_view content) {
         // Check if "static" is in the front (seeing if the captured "s" is there) or if
         // it is after the end
         isStaticUnion = captures[1].start != notFound || 
-        toMatch.substr(self.end + 1, unionDeclEnd - self.end).contains("static");
+        toMatch.substr(self.end + 1, unionDeclEnd - self.end - 1).contains("static");
         self.end = unionDeclEnd;
       }
       re::Capture NSCapture{captures[3]};
@@ -92,7 +97,7 @@ cppcoro::generator<Export> getExports1(std::string_view content) {
       // Namespace or static union
       else {
         if(!onlyWhitespace(toMatch, parent.start, self.declStart)) 
-          co_yield {parent.start, self.declStart};
+          co_yield rtn.set(parent.start, self.declStart);
         parent.start = self.end + 1;
         parent.startOffset = 0;
 
@@ -105,24 +110,27 @@ cppcoro::generator<Export> getExports1(std::string_view content) {
     // No match (no more to export)
     else {
       if(!onlyWhitespace(toMatch, parent.start, parent.end))
-        co_yield {parent.start, parent.end};
+        co_yield rtn.set(parent.start, parent.end);
       stack.pop();
     }
   }
 }
 
 // Exports for everything but static variables/functions (no good name either)
-cppcoro::generator<Export> getExports2(std::string_view content, Export export1) {
+cppcoro::generator<const Export&> getExports2(std::string_view content, const Export& export1) {
+  Export rtn;
+
+  // Regex for static functions and static variables
   co_yield export1;
 }
 void addExports(std::string& content, const Opts& opts) {
   std::vector<Export> exports;
-  for(Export exp1 : getExports1(content)) {
-    for(Export exp : getExports2(content, exp1)) {
+  for(const Export& exp1 : getExports1(content)) {
+    for(const Export& exp : getExports2(content, exp1)) {
       exports.emplace_back(exp);
     }
   }
-  for(auto [start, end] : std::views::reverse(exports)) {
+  for(const auto& [start, end] : std::views::reverse(exports)) {
     content.insert(end, opts.closeExport).insert(start, opts.openExport);
   }
 }
