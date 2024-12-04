@@ -14,7 +14,8 @@ cppcoro::generator<File&> iterateFiles(const Opts& opts) {
   std::ifstream ifs;
   std::ofstream ofs;
   logIfVerbose("Scanning input directory...");
-  for(const auto& ent : fs::recursive_directory_iterator(opts.inDir)) {
+  for(const auto& ent : 
+    fs::recursive_directory_iterator(opts.inDir)) {
     path = ent.path();
     logIfVerbose("Current file: {}", path.native());
     pathView = path.extension().native();

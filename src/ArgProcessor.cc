@@ -36,7 +36,8 @@ Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   if(!parseRes) {
     auto err = parseRes.error();
     auto errSrc = err.source();
-  exitWithErr("TOML++ error: {} at {}({}:{})", err.description(), configPath, errSrc.begin.line, errSrc.begin.column);
+    exitWithErr("TOML++ error: {} at {}({}:{})", err.description(), configPath, 
+    errSrc.begin.line, errSrc.begin.column);
   }
   auto config{std::move(parseRes.table())};
   opts.inDir = config["inDir"].value_or("");
@@ -54,7 +55,9 @@ Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
   opts.moduleInterfaceExt = config["moduleInterfaceExt"].value_or(".cppm");
   opts.openExport = config["openExport"].value_or("export {\n");
   opts.closeExport = config["closeExport"].value_or("}\n");
-  logIfVerbose("inDir = {}\noutDir = {}\nhdrExtRegex = {}\nsrcExtRegex = {}\nmoduleInterfaceExt = {}\nopenExport = {}\ncloseExport = {}", opts.inDir.c_str(), opts.outDir.c_str(), hdrExtRegexStr, srcExtRegexStr, opts.moduleInterfaceExt, opts.openExport, opts.closeExport);
+  logIfVerbose("inDir = {}\noutDir = {}\nhdrExtRegex = {}\nsrcExtRegex = {}\nmoduleInterfaceExt = {}\nopenExport = {}\ncloseExport = {}", 
+    opts.inDir.c_str(), opts.outDir.c_str(), hdrExtRegexStr, srcExtRegexStr, 
+    opts.moduleInterfaceExt, opts.openExport, opts.closeExport);
   
   // Implicit move construction
   return opts;

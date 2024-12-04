@@ -6,7 +6,8 @@
 
 namespace re {
 
-void ckPCRE2Code(int status, const std::source_location& loc = std::source_location::current()) {
+void ckPCRE2Code(int status, const std::source_location& loc 
+  = std::source_location::current()) {
   // Code inside this range is OK
   if(status > -2 && status < 101) return;
   char errMsg[256];
@@ -54,13 +55,16 @@ void Pattern::set(std::string_view pat, uint32_t opts) {
   matchData = pcre2_match_data_create_from_pattern(pattern, nullptr);
   if(matchData == nullptr) exitWithErr("Regex error: Unable to allocate memory for match");
 }
-std::optional<Captures> Pattern::match(std::string_view subject, size_t startOffset, uint32_t opts) const {
-  int count{pcre2_jit_match(pattern, reinterpret_cast<PCRE2_SPTR>(subject.data()), subject.length(), startOffset, opts, matchData, nullptr)};
+std::optional<Captures> Pattern::match(std::string_view subject, size_t startOffset, 
+  uint32_t opts) const {
+  int count{pcre2_jit_match(pattern, reinterpret_cast<PCRE2_SPTR>(subject.data()), 
+    subject.length(), startOffset, opts, matchData, nullptr)};
   ckPCRE2Code(count);
   if(count < 1) return std::nullopt;
   return std::make_optional<Captures>(pcre2_get_ovector_pointer(matchData), count);
 }
-cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, size_t startOffset, uint32_t opts) const {
+cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, 
+  size_t startOffset, uint32_t opts) const {
   std::optional<Captures> maybeCaptures;
   while((maybeCaptures = match(subject, startOffset, opts))) {
     Captures c{*maybeCaptures};

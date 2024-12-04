@@ -15,8 +15,10 @@ template <typename... T> struct exitWithErr {
     exitWithErr(loc, fmt, std::forward<T>(args)...);
   }
   
-  // Overload for indirect callers (ie. calling from an error handling function). Custom source location is here to give correct error location
-  [[noreturn]] exitWithErr(const std::source_location& loc, fmt::format_string<T...> fmt, T&&... args) {
+  // Overload for indirect callers (ie. calling from an error handling function). 
+  // Custom source location is here to give correct error location
+  [[noreturn]] exitWithErr(const std::source_location& loc, fmt::format_string<T...> fmt
+    , T&&... args) {
     std::string_view filename{loc.file_name()};
     filename.remove_prefix(filename.find_last_of(pathSeparator));
     fmt::print("Exception thrown at {}({}:{}): ", filename, loc.line(), loc.column());
@@ -24,8 +26,10 @@ template <typename... T> struct exitWithErr {
     throw 1;
   }  
 };
-template <typename... T> exitWithErr(fmt::format_string<T...> fmt, T&&...) -> exitWithErr<T...>;
-template <typename... T> exitWithErr(const std::source_location& loc, fmt::format_string<T...> fmt, T&&...) -> exitWithErr<T...>;
+template <typename... T> exitWithErr(fmt::format_string<T...> fmt, T&&...)
+  -> exitWithErr<T...>;
+template <typename... T> exitWithErr(const std::source_location& loc,
+  fmt::format_string<T...> fmt, T&&...) -> exitWithErr<T...>;
 
 template <typename... T> void log(fmt::format_string<T...> fmt, T&&... args) {
   fmt::println(fmt, std::forward<T>(args)...);
