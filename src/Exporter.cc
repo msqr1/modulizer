@@ -29,8 +29,10 @@ struct DeclScope {
   size_t start;
 
   // For searching
-  size_t startOffset{};
+  size_t startOffset;
   size_t end;
+  DeclScope(size_t declStart, size_t start, size_t startOffset, size_t end): declStart{declStart}, start{start}, startOffset{startOffset}, end{end} {}
+  DeclScope(): startOffset{} {};
 };
 
 // Exports for everything but static unions and anonymous namespace (sorry I can't think of a better name for this)
@@ -39,7 +41,7 @@ void getExports1(std::string_view content) {
   // Matches namespace or UNNAMED union. Capture the "s" in static to try testing if the union is static or not. Capture the "u" to see if it is a namespace or union.
   re::Pattern pat{R"((?:(?:(s)tatic|inline)\s++)?(?:(u)nion\s*|namespace([^\{]*))\{)"};
   std::stack<DeclScope> stack;
-  stack.emplace(0, content.size());
+  stack.emplace(0, 0, 0, content.size());
   DeclScope self;
   std::string_view toMatch;
   std::optional<re::Captures> maybeCaptures;
@@ -59,12 +61,12 @@ void getExports1(std::string_view content) {
       
       // If this is a union (seeing if the captured "u" is there)
       bool isUnion{captures[2].start != notFound};
-      bool isStaticUnion;
+      bool isStaticUnion{};
       if(isUnion) {
         size_t unionDeclEnd{toMatch.find(';', self.end + 1)};
 
-        // Check if "static" is in the front (seeing if the captured "s" is there)
-        isStaticUnion = captures[1].start != notFound || toMatch.substr(self.end + 1, unionDeclEnd).contains("static");
+        // Check if "static" is in the front (seeing if the captured "s" is there) or if it is after the end
+        isStaticUnion = captures[1].start != notFound || toMatch.substr(self.end + 1, unionDeclEnd - self.end).contains("static");
         self.end = unionDeclEnd;
       }
       re::Capture NSCapture{captures[3]};
@@ -74,14 +76,14 @@ void getExports1(std::string_view content) {
         toMatch.substr(NSCapture.start, NSCapture.end - NSCapture.start).find_first_not_of(" \n\t") == notFound
       };
       
-      // Unnamed union variable (union {...} var;)
+      // Unnamed union variable (union {...} name;)
       if(isUnion && !isStaticUnion) {
         parent.startOffset = self.end - parent.start + 1;
       }
       
       // Namespace or static union
       else {
-        log("1. Exporting: {} {}", parent.start, self.declStart - parent.start);
+        log("1. Exporting: {}", content.substr(parent.start, self.declStart - parent.start));
         parent.start = self.end + 1;
         parent.startOffset = 0;
 
@@ -94,8 +96,7 @@ void getExports1(std::string_view content) {
 
     // No match (no more to export)
     else {
-      // TODO: Fix end index behavior
-      log("2. Exporting: {} {}", parent.start, parent.end - parent.start);
+      log("2. Exporting: {}", content.substr(parent.start, parent.end - parent.start));
       stack.pop();
     }
   }

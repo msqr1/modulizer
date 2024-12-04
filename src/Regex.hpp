@@ -23,9 +23,11 @@ public:
 // Captures doesn't own anything, it's just a view over the ovector
 class Captures {
 friend class Pattern;
-  int pairCnt;
   size_t* ovector;
 public:
+
+  // Will get removed later, here for testing purpose only
+  int pairCnt;
   Captures();
   Captures(size_t* ovector, int pairCnt);
   Capture operator[](int idx) const;
