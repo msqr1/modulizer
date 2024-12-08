@@ -8,18 +8,21 @@
 #include <vector>
 #include <ranges>
 
-void matchBrace(size_t& pos, std::string_view str) {
+// Generic template for matching braces, parentheses, ...
+template <char open, char close> void match(size_t& pos, std::string_view str) {
   int nest{1};
   while(nest) {
     switch(str[++pos]) {
-    case '{':
+    case open:
       nest++;
       break;
-    case '}':
+    case close:
       nest--;
     }
   }
 }
+
+auto matchBraces = match<'{','}'>;
 
 // PCRE2 for non-matching capture groups, and
 // std::string::find* for not found return a -1 size_t  
@@ -58,7 +61,7 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
   
   // Matches namespace or UNNAMED union. Capture the "s" in static to try testing if the
   // union is static or not. Capture the "u" to see if it is a namespace or union.
-  re::Pattern pat{R"((?:(?:(s)tatic|inline)\s++)?(?:(u)nion\s*|namespace([^\{]*))\{)"};
+  re::Pattern pat{R"((?:(?:(s)tatic|inline)\s++)?(?:namespace([^\{]*+)|(u)nion\s*+)\{)"};
   std::stack<DeclScope> stack;
   stack.emplace(0, 0, 0, content.size());
   DeclScope self;
@@ -72,7 +75,7 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
       captures = *maybeCaptures;
       self.declStart = captures[0].start;
       self.start = self.end = captures[0].end;
-      matchBrace(self.end, toMatch);
+      matchBraces(self.end, toMatch);
       
       // If this is a union (seeing if the captured "u" is there)
       bool isUnion{captures[2].start != notFound};
@@ -118,9 +121,10 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
 
 // Exports for everything but static variables/functions (no good name either)
 cppcoro::generator<const Export&> getExports2(std::string_view content, const Export& export1) {
-  Export rtn;
 
-  // Regex for static functions and static variables
+  // Regex for declarations of (template) struct/class
+  re::Pattern pat{R"((?:template[^{]+)?(?:class|struct)[^{]+{)"};
+
   co_yield export1;
 }
 void addExports(std::string& content, const Opts& opts) {
