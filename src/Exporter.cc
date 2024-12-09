@@ -9,7 +9,7 @@
 #include <ranges>
 
 // Generic template for matching braces, parentheses, ...
-template <char open, char close> void match(size_t& pos, std::string_view str) {
+template <char open, char close> void balance(size_t& pos, std::string_view str) {
   int nest{1};
   while(nest) {
     switch(str[++pos]) {
@@ -22,7 +22,7 @@ template <char open, char close> void match(size_t& pos, std::string_view str) {
   }
 }
 
-auto matchBraces = match<'{','}'>;
+auto balanceBrace = balance<'{','}'>;
 
 // PCRE2 for non-matching capture groups, and
 // std::string::find* for not found return a -1 size_t  
@@ -75,7 +75,7 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
       captures = *maybeCaptures;
       self.declStart = captures[0].start;
       self.start = self.end = captures[0].end;
-      matchBraces(self.end, toMatch);
+      balanceBrace(self.end, toMatch);
       
       // If this is a union (seeing if the captured "u" is there)
       bool isUnion{captures[2].start != notFound};
@@ -119,16 +119,20 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
   }
 }
 
+
 // Exports for everything but static variables/functions (no good name either)
 cppcoro::generator<const Export&> getExports2(std::string_view content, const Export& export1) {
-
-  // Regex for declarations of (template) struct/class
-  re::Pattern pat{R"((?:template[^{]+)?(?:class|struct)[^{]+{)"};
-
+  Export rtn;
+  content.remove_suffix(content.size() - export1.end);
+  re::Pattern avoid{R"((?:class|struct)[^{]{2,}{)"};
+  size_t startoffset{};
+  for(re::Captures c : avoid.matchAll(content, startoffset)) {
+    
+  }
   co_yield export1;
-}
+} 
 void addExports(std::string& content, const Opts& opts) {
-  std::vector<Export> exports;
+  /*std::vector<Export> exports;
   for(const Export& exp1 : getExports1(content)) {
     for(const Export& exp : getExports2(content, exp1)) {
       exports.emplace_back(exp);
@@ -136,5 +140,5 @@ void addExports(std::string& content, const Opts& opts) {
   }
   for(const auto& [start, end] : std::views::reverse(exports)) {
     content.insert(end, opts.closeExport).insert(start, opts.openExport);
-  }
+  }*/
 }

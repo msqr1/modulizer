@@ -52,7 +52,7 @@ public:
 
   std::optional<Captures> match(std::string_view subject, size_t startOffset = 0, uint32_t opts = 0) const;
 
-  cppcoro::generator<Captures> matchAll(std::string_view subject, size_t startOffset = 0, uint32_t opts = 0) const;
+  cppcoro::generator<Captures> matchAll(std::string_view subject, const size_t& startOffset = 0, uint32_t opts = 0) const;
 };
 
 } // namespace re

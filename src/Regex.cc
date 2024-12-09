@@ -64,7 +64,7 @@ std::optional<Captures> Pattern::match(std::string_view subject, size_t startOff
   return std::make_optional<Captures>(pcre2_get_ovector_pointer(matchData), count);
 }
 cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, 
-  size_t startOffset, uint32_t opts) const {
+  const size_t& startOffset, uint32_t opts) const {
   std::optional<Captures> maybeCaptures;
   while((maybeCaptures = match(subject, startOffset, opts))) {
     Captures c{*maybeCaptures};
