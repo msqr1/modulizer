@@ -15,7 +15,8 @@ void ckPCRE2Code(int status, const std::source_location& loc
   exitWithErr(loc, "Regex error: {}", errMsg);
 }
 
-Capture::Capture(size_t start, size_t end) : start{start}, end{end} {}
+Capture::Capture(): start{}, end{} {};
+Capture::Capture(size_t start, size_t end): start{start}, end{end} {}
 
 Captures::Captures() {}
 Captures::Captures(size_t* ovector, int pairCnt): ovector{ovector}, pairCnt{pairCnt} {}
@@ -63,14 +64,14 @@ std::optional<Captures> Pattern::match(std::string_view subject, size_t startOff
   if(count < 1) return std::nullopt;
   return std::make_optional<Captures>(pcre2_get_ovector_pointer(matchData), count);
 }
-cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, 
-  const size_t& startOffset, uint32_t opts) const {
+/*cppcoro::generator<Captures> Pattern::matchAll(std::string_view subject, 
+  size_t startOffset, uint32_t opts) const {
   std::optional<Captures> maybeCaptures;
   while((maybeCaptures = match(subject, startOffset, opts))) {
     Captures c{*maybeCaptures};
     startOffset = c.ovector[1];
     co_yield c;
   }
-}
+}*/
 
 } // namespace re

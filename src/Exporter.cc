@@ -42,16 +42,16 @@ struct Export {
   }
 };
 
-struct DeclScope {
+struct NSorUnion {
   size_t declStart;
   size_t start;
 
   // For searching
   size_t startOffset;
   size_t end;
-  DeclScope(size_t declStart, size_t start, size_t startOffset, size_t end): 
+  NSorUnion(size_t declStart, size_t start, size_t startOffset, size_t end): 
     declStart{declStart}, start{start}, startOffset{startOffset}, end{end} {}
-  DeclScope(): startOffset{} {};
+  NSorUnion(): startOffset{} {};
 };
 
 // Exports for everything but static unions and anonymous namespace 
@@ -62,14 +62,14 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
   // Matches namespace or UNNAMED union. Capture the "s" in static to try testing if the
   // union is static or not. Capture the "u" to see if it is a namespace or union.
   re::Pattern pat{R"((?:(?:(s)tatic|inline)\s++)?(?:namespace([^\{]*+)|(u)nion\s*+)\{)"};
-  std::stack<DeclScope> stack;
-  stack.emplace(0, 0, 0, content.size());
-  DeclScope self;
-  std::string_view toMatch;
   std::optional<re::Captures> maybeCaptures;
   re::Captures captures;
+  std::stack<NSorUnion> stack;
+  stack.emplace(0, 0, 0, content.size());
+  NSorUnion self;
+  std::string_view toMatch;
   while(!stack.empty()) {
-    DeclScope& parent = stack.top();
+    NSorUnion& parent = stack.top();
     toMatch = content.substr(0, parent.end);
     if((maybeCaptures = pat.match(toMatch, parent.start + parent.startOffset))) {
       captures = *maybeCaptures;
@@ -119,26 +119,36 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
   }
 }
 
-
 // Exports for everything but static variables/functions (no good name either)
 cppcoro::generator<const Export&> getExports2(std::string_view content, const Export& export1) {
   Export rtn;
   content.remove_suffix(content.size() - export1.end);
-  re::Pattern avoid{R"((?:class|struct)[^{]{2,}{)"};
-  size_t startoffset{};
-  for(re::Captures c : avoid.matchAll(content, startoffset)) {
-    
+  
+  // Regex to find classes and structs to avoid
+  re::Pattern typePat{R"((?:class|struct)[^{]{2,}{)"};
+  std::optional<re::Captures> maybeCaptures;
+  re::Capture classDecl;
+  size_t startOffset{export1.start};
+  while((maybeCaptures = typePat.match(content, startOffset))) {
+    classDecl = (*maybeCaptures)[0];
+    // Process static symbols from start to classDecl.start
+    log("e: {}", content.substr(startOffset));
+    startOffset = classDecl.end;
+    balanceBrace(startOffset, content);
+    startOffset = content.find(';', startOffset + 1) + 1;
   }
+  // Process static symbols from start to content's end
   co_yield export1;
 } 
 void addExports(std::string& content, const Opts& opts) {
-  /*std::vector<Export> exports;
+
+  //std::vector<Export> exports;
   for(const Export& exp1 : getExports1(content)) {
     for(const Export& exp : getExports2(content, exp1)) {
-      exports.emplace_back(exp);
+      
     }
   }
-  for(const auto& [start, end] : std::views::reverse(exports)) {
+  /*for(const auto& [start, end] : std::views::reverse(exports)) {
     content.insert(end, opts.closeExport).insert(start, opts.openExport);
   }*/
 }
