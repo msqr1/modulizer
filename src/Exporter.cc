@@ -11,15 +11,18 @@
 // Generic template for matching braces, parentheses, ...
 template <char open, char close> void balance(size_t& pos, std::string_view str) {
   int nest{1};
-  while(nest) {
-    switch(str[++pos]) {
+
+  // 1st iteration always run, use do-while
+  do {
+    switch(str[pos]) {
     case open:
       nest++;
       break;
     case close:
       nest--;
     }
-  }
+    ++pos;
+  } while(nest); 
 }
 
 auto balanceBrace = balance<'{','}'>;
@@ -68,7 +71,9 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
   stack.emplace(0, 0, 0, content.size());
   NSorUnion self;
   std::string_view toMatch;
-  while(!stack.empty()) {
+
+  // 1st iteration always run, use do-while
+  do {
     NSorUnion& parent = stack.top();
     toMatch = content.substr(0, parent.end);
     if((maybeCaptures = pat.match(toMatch, parent.start + parent.startOffset))) {
@@ -108,7 +113,7 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
         // count as a namespace, so isUnnamedNS will be false and this runs
         if(!(isUnion || isUnnamedNS)) stack.emplace(self);
       }
-    }
+    } 
 
     // No match (no more to export)
     else {
@@ -116,7 +121,7 @@ cppcoro::generator<const Export&> getExports1(std::string_view content) {
         co_yield rtn.set(parent.start, parent.end);
       stack.pop();
     }
-  }
+  } while(!stack.empty());
 }
 
 // Exports for everything but static variables/functions (no good name either)
@@ -128,24 +133,25 @@ cppcoro::generator<const Export&> getExports2(std::string_view content, const Ex
   re::Pattern typePat{R"((?:class|struct)[^{]{2,}{)"};
   std::optional<re::Captures> maybeCaptures;
   re::Capture classDecl;
-  size_t startOffset{export1.start};
-  while((maybeCaptures = typePat.match(content, startOffset))) {
+  size_t processed{export1.start};
+  while((maybeCaptures = typePat.match(content, processed))) {
     classDecl = (*maybeCaptures)[0];
-    // Process static symbols from start to classDecl.start
-    log("e: {}", content.substr(startOffset));
-    startOffset = classDecl.end;
-    balanceBrace(startOffset, content);
-    startOffset = content.find(';', startOffset + 1) + 1;
+    // Process static symbols from processed to classDecl.start
+
+    processed = classDecl.end;
+    balanceBrace(processed, content);
+    processed = content.find(';', processed + 1) + 1;
   }
-  // Process static symbols from start to content's end
+  // Process static symbols from processed to content's end
   co_yield export1;
 } 
+
 void addExports(std::string& content, const Opts& opts) {
 
   //std::vector<Export> exports;
   for(const Export& exp1 : getExports1(content)) {
     for(const Export& exp : getExports2(content, exp1)) {
-      
+      // exports.push_back(exp);
     }
   }
   /*for(const auto& [start, end] : std::views::reverse(exports)) {
