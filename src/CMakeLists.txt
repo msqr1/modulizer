@@ -51,7 +51,3 @@ set(PCRE2_SUPPORT_JIT on CACHE BOOL "PCRE2 JIT")
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(../3rdParty/pcre2 "${CMAKE_BINARY_DIR}/pcre2")
 target_link_libraries(modulizer pcre2-8)
-
-
-
- 

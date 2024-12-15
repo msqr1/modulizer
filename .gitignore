@@ -1,4 +1,5 @@
 test*
+!test
 .vscode
 src-old
 src/modulizer

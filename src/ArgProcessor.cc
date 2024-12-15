@@ -9,8 +9,9 @@ namespace fs = std::filesystem;
 
 const char* getOptVal(int optidx, int argc, char* argv[]) {
   optidx++;
-  if(optidx == argc || argv[optidx][0] == '-') 
+  if(optidx == argc || argv[optidx][0] == '-') {
     exitWithErr("Invalid/Nonexistent value for option {}", argv[optidx - 1]);
+  }
   return argv[optidx];
 }
 

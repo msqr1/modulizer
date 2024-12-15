@@ -11,12 +11,13 @@ void run(int argc, char* argv[]) {
     addExports(file.content, opts);
   }
 }
+
 int main(int argc, char* argv[]) {
   try {
     run(argc, argv);
   }
   catch(const std::exception& exc) {
-    log("{}", exc.what());
+    log("std::exception thrown: {}", exc.what());
   }
   catch(int exitCode) {
     return exitCode;
