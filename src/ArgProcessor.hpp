@@ -13,4 +13,4 @@ struct Opts {
   std::string closeExport;
 };
 
-Opts getOptsOrExit(int argc, char* argv[], bool& verbose);
+Opts getOptsOrExit(int argc, const char* const* argv, bool& verbose);

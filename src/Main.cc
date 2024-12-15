@@ -5,14 +5,14 @@
 #include "Exporter.hpp"
 #include "../3rdParty/Generator.hpp"
 
-void run(int argc, char* argv[]) {
-  Opts opts{getOptsOrExit(argc, argv, verbose)};
+void run(int argc, const char* const* argv) {
+  const Opts opts{getOptsOrExit(argc, argv, verbose)};
   for(File& file : iterateFiles(opts)) {
     addExports(file.content, opts);
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, const char* const* argv) {
   try {
     run(argc, argv);
   }

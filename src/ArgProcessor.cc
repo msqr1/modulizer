@@ -7,7 +7,7 @@
 
 namespace fs = std::filesystem;
 
-const char* getOptVal(int optidx, int argc, char* argv[]) {
+std::string_view getOptVal(int optidx, int argc, const char* const* argv) {
   optidx++;
   if(optidx == argc || argv[optidx][0] == '-') {
     exitWithErr("Invalid/Nonexistent value for option {}", argv[optidx - 1]);
@@ -15,7 +15,7 @@ const char* getOptVal(int optidx, int argc, char* argv[]) {
   return argv[optidx];
 }
 
-Opts getOptsOrExit(int argc, char* argv[], bool& verbose) {
+Opts getOptsOrExit(int argc, const char* const* argv, bool& verbose) {
   Opts opts;
   std::string_view arg, configPath;
   configPath = "modulizer.toml";

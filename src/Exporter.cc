@@ -6,6 +6,11 @@
 #include <string_view>
 #include <stack>
 
+// PCRE2 for non-matching capture groups, and
+// std::string::find* for not found return a -1 size_t (std::string::npos)
+constexpr size_t notFound{static_cast<size_t>(-1)};
+constexpr std::string_view whitespaces{" \n\t"};
+
 // Generic template for matching braces, parentheses, ...
 // Set pos to ONE PAST the matching brace (just the nature of the algorithm)
 void balanceBrace(std::string_view str, size_t& pos) {
@@ -24,11 +29,7 @@ void balanceBrace(std::string_view str, size_t& pos) {
   } while(nest); 
 }
 
-// PCRE2 for non-matching capture groups, and
-// std::string::find* for not found return a -1 size_t (std::string::npos)
-size_t notFound{static_cast<size_t>(-1)};
-std::string_view whitespaces{" \n\t"};
-
+// Usually checked before co_yield'ing an export
 bool onlyWhitespace(std::string_view str, size_t start, size_t end) {
   return str.substr(start, end - start).find_first_not_of(whitespaces) == notFound;
 }
@@ -44,6 +45,9 @@ struct Export {
   }
 };
 
+// Don't pollute global NS, also for grouping purpose
+namespace unionAndNSExport {
+
 struct NSorUnion {
   size_t declStart;
   size_t start;
@@ -58,7 +62,7 @@ struct NSorUnion {
 };
 
 // Exports for everything but static unions and anonymous namespace 
-cppcoro::generator<const Export&> unionAndNSExports(std::string_view content) {
+cppcoro::generator<const Export&> get(std::string_view content) {
   Export rtn;
   
   // Matches namespace or UNNAMED union. Capture the "s" in static to try testing if the
@@ -129,6 +133,17 @@ cppcoro::generator<const Export&> unionAndNSExports(std::string_view content) {
   } while(!stack.empty());
 }
 
+} // namespace unionAndNSExport
+
+// Don't pollute global NS, also for grouping purpose
+namespace staticSymbolExport {
+
+// Regex to find static symbols
+const re::Pattern pat{R"(static[^;{]+[;{])"};
+
+// Regex to find classes and structs to avoid
+const re::Pattern typePat{R"((?:class|struct)[^{]{2,}{)"};
+
 // Get the start of a potential template declaration (the 't' in template). 
 // This is used when we want to backscan a variable/function declaration 
 // to get he preceding template<...> part if it has one
@@ -168,27 +183,18 @@ std::optional<size_t> getTemplate(std::string_view str, size_t idx) {
 // The general idea is we scan for classes to avoid them, then we scan for
 // static symbols in between those classes, and export code in the middle
 // of the subsequent static symbols (a class could be in there too)
-cppcoro::generator<const Export&> staticSymbolExports(std::string_view content, 
+cppcoro::generator<const Export&> get(std::string_view content, 
 const Export& exp1) {
   Export rtn;
   content.remove_suffix(content.size() - exp1.end);
   std::string_view toMatch;
-
-  // Regex to find static symbols
-  // Static because this function is called many times, else it will segfault
-  // and I don't know why.
-  static re::Pattern pat{R"(static[^;{]+[;{])"};
+  
   std::optional<re::Captures> maybeCaptures;
   std::optional<size_t> maybeTemplate;
   size_t processed{exp1.start};
   size_t lastExportEnd{exp1.start};
   {
-    // Regex to find classes and structs to avoid
-    // Static because this function is called many times, else it will segfault
-    // and I don't know why.
-    static re::Pattern typePat{R"((?:class|struct)[^{]{2,}{)"};
-    re::Capture classDecl;
-    
+    re::Capture classDecl; 
     while((maybeCaptures = typePat.match(content, processed))) {
       classDecl = (*maybeCaptures)[0];
       toMatch = content.substr(0, classDecl.start);
@@ -234,10 +240,14 @@ const Export& exp1) {
   }
 } 
 
+} // namespace staticSymbolExport
+
 void addExports(std::string& content, const Opts& opts) {
   std::stack<Export> exports;
-  for(const Export& exp1 : unionAndNSExports(content)) {
-    for(const Export& exp : staticSymbolExports(content, exp1)) exports.push(exp);
+  for(const Export& exp1 : unionAndNSExport::get(content)) {
+    for(const Export& exp : staticSymbolExport::get(content, exp1)) {
+      exports.push(exp);
+    }
   }
 
   // 1st iteration always run, use do-while

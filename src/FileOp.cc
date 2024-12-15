@@ -7,7 +7,7 @@
 namespace fs = std::filesystem;
 
 cppcoro::generator<File&> iterateFiles(const Opts& opts) {
-  size_t prefixLen = opts.inDir.native().length() + 1;
+  const size_t prefixLen = opts.inDir.native().length() + 1;
   File file;
   fs::path path;
   std::string_view pathView;
