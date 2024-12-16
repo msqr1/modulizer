@@ -21,8 +21,8 @@
         -  ```-h --help``` - Print help and exit
         -  ```-v --version``` - Print version and exit
     - ```.toml```-only (modularization settings):
-        - ```inDir``` - Input directory
-        - ```outDir``` - Output directory
+        - ```inDir``` - Input directory (required)
+        - ```outDir``` - Output directory (required)
         - ```verbose``` - Enable verbose output (debugging)
         - ```headerExtRegex``` - Header file extension regex
         - ```sourceExtRegex``` - Source file extension regex
@@ -31,7 +31,6 @@
         - ```closeExport``` - Syntax for closing an export section
     - Default values for ```.toml```-only settings:
         - verbose: ```false``` [boolean]
-        - outDir: (same as ```inDir```) [string]
         - headerExtRegex: ```"\.h(pp|xx)?"``` [string]
         - sourceExtRegex: ```"\.c(pp|c|xx)"``` [string]
         - moduleInterfaceExt: ```".cppm"``` [string]
