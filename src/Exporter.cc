@@ -1,10 +1,13 @@
 #include "Exporter.hpp"
 #include "Base.hpp"
 #include "ArgProcessor.hpp"
+#include "Regex.hpp"
 #include "../3rdParty/Generator.hpp"
 #include <string>
 #include <string_view>
 #include <stack>
+
+namespace {
 
 // PCRE2 for non-matching capture groups, and
 // std::string::find* for not found return a -1 size_t (std::string::npos)
@@ -45,7 +48,8 @@ struct Export {
   }
 };
 
-// Don't pollute global NS, also for grouping purpose
+// Namespaces are for grouping and anti-pollution purpose
+
 namespace unionAndNSExport {
 
 struct NSorUnion {
@@ -135,7 +139,6 @@ cppcoro::generator<const Export&> get(std::string_view content) {
 
 } // namespace unionAndNSExport
 
-// Don't pollute global NS, also for grouping purpose
 namespace staticSymbolExport {
 
 // Regex to find static symbols
@@ -242,7 +245,10 @@ const Export& exp1) {
 
 } // namespace staticSymbolExport
 
+} // namespace
+
 void addExports(std::string& content, const Opts& opts) {
+  logIfVerbose("Acquiring exports...");
   std::stack<Export> exports;
   for(const Export& exp1 : unionAndNSExport::get(content)) {
     for(const Export& exp : staticSymbolExport::get(content, exp1)) {
@@ -251,6 +257,7 @@ void addExports(std::string& content, const Opts& opts) {
   }
 
   // 1st iteration always run, use do-while
+  logIfVerbose("Inserting exports...");
   do {
     auto [start, end]{exports.top()};
     content.insert(end, opts.closeExport).insert(start, opts.openExport);

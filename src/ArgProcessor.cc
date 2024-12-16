@@ -6,6 +6,7 @@
 #include "../3rdParty/toml++/include/toml++/toml.hpp"
 
 namespace fs = std::filesystem;
+namespace {
 
 std::string_view getOptVal(int optidx, int argc, const char* const* argv) {
   optidx++;
@@ -14,6 +15,9 @@ std::string_view getOptVal(int optidx, int argc, const char* const* argv) {
   }
   return argv[optidx];
 }
+
+
+} // namespace
 
 Opts getOptsOrExit(int argc, const char* const* argv, bool& verbose) {
   Opts opts;

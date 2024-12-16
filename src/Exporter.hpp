@@ -1,5 +1,4 @@
 #pragma once
-#include "Regex.hpp"
 #include <iosfwd> // For std::string
 
 struct Opts;

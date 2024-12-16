@@ -5,9 +5,11 @@
 
 extern bool verbose;
 constexpr char pathSeparator{std::filesystem::path::preferred_separator};
+
 size_t rtnSize(char* _, size_t size);
 
 [[noreturn]] void exitOK();
+
 template <typename... T> struct exitWithErr {
 
   // Overload for direct callers, source location is implied
@@ -34,6 +36,7 @@ template <typename... T> exitWithErr(const std::source_location& loc,
 template <typename... T> void log(fmt::format_string<T...> fmt, T&&... args) {
   fmt::println(fmt, std::forward<T>(args)...);
 }
+
 template <typename... T> void logIfVerbose(fmt::format_string<T...> fmt, T&&... args) {
   if(verbose) log(fmt, std::forward<T>(args)...);
 }
