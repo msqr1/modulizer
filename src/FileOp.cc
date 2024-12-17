@@ -24,7 +24,6 @@ cppcoro::generator<File&> iterateFiles(const Opts& opts) {
       logIfVerbose("Is ignored, not header/source");
       continue;
     }
-
     logIfVerbose("Is a header/source, trying to read...");
     ifs.open(path);
     if(!ifs) exitWithErr("Unable to open {} for reading", path.native());
@@ -33,8 +32,8 @@ cppcoro::generator<File&> iterateFiles(const Opts& opts) {
     ifs.read(file.content.data(), fileSize);
     if(ifs.fail() || ifs.bad()) exitWithErr("Unable to read from {}", path.native());
     ifs.close();
+    file.path = path;
     co_yield file;
-
     logIfVerbose("Trying to write...");
     if(file.type == FileType::Header) path.replace_extension(opts.moduleInterfaceExt);
     pathView = path.native();

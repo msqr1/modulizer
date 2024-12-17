@@ -18,6 +18,7 @@ enum FileType {
 
 struct File {
   FileType type;
+  std::filesystem::path path;
   std::string content;
 };
 

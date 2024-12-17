@@ -141,11 +141,11 @@ cppcoro::generator<const Export&> get(std::string_view content) {
 
 namespace staticSymbolExport {
 
-// Regex to find static symbols
-const re::Pattern pat{R"(static[^;{]+[;{])"};
-
 // Regex to find classes and structs to avoid
 const re::Pattern typePat{R"((?:class|struct)[^{]{2,}{)"};
+
+// Regex to find static symbols
+const re::Pattern pat{R"(static[^;{]+[;{])"};
 
 // Get the start of a potential template declaration (the 't' in template). 
 // This is used when we want to backscan a variable/function declaration 

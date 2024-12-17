@@ -1,4 +1,6 @@
 #pragma once
 #include <iosfwd> // For std::string
 
-void modularize(std::string& content);
+struct Opts;
+
+void modularize(File& file, const Opts& opts);
