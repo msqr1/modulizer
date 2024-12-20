@@ -24,6 +24,7 @@
         - ```inDir``` - Input directory (required)
         - ```outDir``` - Output directory (required)
         - ```verbose``` - Enable verbose output (debugging)
+        - ```duplicateIncludeMode``` - Set the duplicate include prevention mode used by the project. (```0```: include guards, ```1```: ```#pragma once```)
         - ```headerExtRegex``` - Header file extension regex
         - ```sourceExtRegex``` - Source file extension regex
         - ```moduleInterfaceExt``` - Module interface unit file extension
@@ -31,6 +32,7 @@
         - ```closeExport``` - Syntax for closing an export section
     - Default values for ```.toml```-only settings:
         - verbose: ```false``` [boolean]
+        - duplicateIncludeMode: ```0``` [int]
         - headerExtRegex: ```"\.h(pp|xx)?"``` [string]
         - sourceExtRegex: ```"\.c(pp|c|xx)"``` [string]
         - moduleInterfaceExt: ```".cppm"``` [string]

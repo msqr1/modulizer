@@ -6,6 +6,8 @@
 
 namespace re {
 
+namespace {
+
 void ckPCRE2Code(int status, const std::source_location& loc 
   = std::source_location::current()) {
   // Code inside this range is OK
@@ -14,6 +16,8 @@ void ckPCRE2Code(int status, const std::source_location& loc
   pcre2_get_error_message(status, reinterpret_cast<PCRE2_UCHAR*>(errMsg), 256);
   exitWithErr(loc, "Regex error: {}", errMsg);
 }
+
+} // namespace
 
 Capture::Capture(): start{}, end{} {};
 

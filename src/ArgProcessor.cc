@@ -16,13 +16,12 @@ std::string_view getOptVal(int optidx, int argc, const char* const* argv) {
   return argv[optidx];
 }
 
-
 } // namespace
 
 Opts getOptsOrExit(int argc, const char* const* argv, bool& verbose) {
   Opts opts;
-  std::string_view arg, configPath;
-  configPath = "modulizer.toml";
+  std::string_view arg;
+  std::string_view configPath{"modulizer.toml"};
   if(argc > 1) {
     arg = argv[1];
 
@@ -49,7 +48,6 @@ Opts getOptsOrExit(int argc, const char* const* argv, bool& verbose) {
   if(opts.inDir.empty()) exitWithErr("inDir must be specified");
   opts.outDir = config["outDir"].value_or("");
   if(opts.outDir.empty()) exitWithErr("outDir must be specified");
-  //exitWithErr("inDir and outDir cannot be the same");
 
   // Default values
   verbose = config["verbose"].value_or(false);
