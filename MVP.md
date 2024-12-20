@@ -37,8 +37,7 @@
         - openExport: ```export {\n``` [string]
         - closeExport: ```}\n``` [string]
     - Config file syntax follows [TOML](https://toml.io/en)
-- Architecture diagrams: https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=Modules.html#Uhttps%3A%2F%2Fraw.githubusercontent.com%2Fmsqr1%2Fmodulizer%2Fmain%2FModules.html
-
+    
 ## Design goals
 - **Automation**: Refactor code into named modules automatically
 - **Validity**: Generate correct C++20 code
