@@ -16,10 +16,6 @@ std::string_view getOptVal(int optidx, int argc, const char* const* argv) {
   return argv[optidx];
 }
 
-// For lambda overloading
-template<class... T> struct overload : T... { using T::operator()...; };
-template<class... T> overload(T...) -> overload<T...>;
-
 } // namespace
 
 Opts getOptsOrExit(int argc, const char* const* argv, bool& verbose) {
@@ -48,44 +44,34 @@ Opts getOptsOrExit(int argc, const char* const* argv, bool& verbose) {
     errSrc.begin.line, errSrc.begin.column);
   }
   const toml::table config{std::move(parseRes.table())};
-  toml::node_view<const toml::node> node;
-  auto ckAndGetMustHave = [&node, &config](std::string_view key){
-    if(config.contains(key)) {
-      if(node = config[key], node.is_string()) return node.ref<std::string>();
-      else exitWithErr("Incorrect TOML type for {}", key);
-    }
-    exitWithErr("{} must be specified", key);
-  };
-  opts.inDir = ckAndGetMustHave("inDir");
-  opts.outDir = ckAndGetMustHave("outDir");
-  auto ckAndGet = overload (
-    [&node, &config]<typename T>(std::string_view key, T&& defaultVal) {
-      if(config.contains(key)) {
-        if(node = config[key], node.is<T>()) return node.ref<T>();
-        else exitWithErr("Incorrect TOML type for {}", key);
-      }
-      return defaultVal;
-    },
-    
-    // Strings need special care because node.is() doesn't recognize const char*
-    // defaultVal is const char* because it should always be a string literal in 
-    // the code
-    [&node, &config](std::string_view key, const char* defaultVal) -> std::string {
-      if(config.contains(key)) {
-        if(node = config[key], node.is_string()) return node.ref<std::string>();
-        else exitWithErr("Incorrect TOML type for {}", key);
-      }
-      return defaultVal;
-    }
-  );
-  verbose = ckAndGet("verbose", false);
-  opts.duplicateIncludeMode = ckAndGet("duplicateIncludeMode", static_cast<int64_t>(0));
-  opts.hdrExtRegex.set(ckAndGet("hdrExtRegex", R"(\.h(?:pp|xx)?)"));
-  opts.srcExtRegex.set(ckAndGet("srcExtRegelax", R"(\.c(?:pp|c|xx)?)"));
-  opts.moduleInterfaceExt = ckAndGet("moduleInterfaceExt", ".cppm");
-  opts.openExport = ckAndGet("openExport", "export{\n");
-  opts.closeExport = ckAndGet("closeExport", "}\n");
+  auto getTypeCk = [&]<typename keyType>(std::string_view key) {
+    const toml::node_view<const toml::node> node{config[key]};
 
+    // TOML need std::string, not const char*, string_view, etc.
+    if constexpr(std::is_convertible_v<keyType, std::string>) {
+      if(node.is_string()) return node.ref<std::string>();
+    }
+    else if(node.is<keyType>()) return node.ref<keyType>();
+    exitWithErr("Incorrect TOML type for {}", key);
+  }; 
+  auto get = [&]<typename T>(std::string_view key, T&& defaultVal) {
+    if(config.contains(key)) return getTypeCk.template operator()<T>(key);
+    if constexpr(std::is_convertible_v<T, std::string>) return std::string{defaultVal};
+    else return std::forward<T>(defaultVal);
+  };
+  auto getMustHaveStr = [&](std::string_view key) {
+    if(!config.contains(key)) exitWithErr("{} must be specified", key);
+    return getTypeCk.template operator()<std::string>(key);
+  };
+  opts.inDir = getMustHaveStr("inDir");
+  opts.outDir = getMustHaveStr("outDir");
+  verbose = get("verbose", false);
+  opts.duplicateIncludeMode = get("duplicateIncludeMode", static_cast<int64_t>(0));
+  opts.hdrExtRegex.set(get("hdrExtRegex", R"(\.h(?:pp|xx)?)"));
+  opts.srcExtRegex.set(get("srcExtRegex", R"(\.c(?:pp|c|xx)?)"));
+  opts.moduleInterfaceExt = get("moduleInterfaceExt", ".cppm");
+  opts.openExport = get("openExport", "export{\n");
+  opts.closeExport = get("closeExport", "}\n");
   const toml::array includePathsArr{*config.get_as<toml::array>("includePaths")};
   for(const toml::node& elem : includePathsArr) {
     if(!elem.is_string()) exitWithErr("includePaths must only contain strings");

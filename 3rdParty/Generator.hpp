@@ -8,6 +8,7 @@
 #include <coroutine>
 #include <exception>
 #include <iterator>
+#include <functional>
 
 namespace cppcoro
 {
