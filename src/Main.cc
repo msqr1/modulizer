@@ -8,8 +8,7 @@
 void run(int argc, const char* const* argv) {
   const Opts opts{getOptsOrExit(argc, argv, verbose)};
   for(File& file : iterateFiles(opts)) {
-    addExports(file.content, opts);
-    // modularize(file, opts);
+    //addExports(file.content, modularize(file, opts), opts);    
   }
 }
 

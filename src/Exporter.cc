@@ -66,7 +66,7 @@ struct NSorUnion {
 };
 
 // Exports for everything but static unions and anonymous namespace 
-cppcoro::generator<const Export&> get(std::string_view content) {
+cppcoro::generator<const Export&> get(std::string_view content, size_t lastImportEnd) {
   Export rtn;
   
   // Matches namespace or UNNAMED union. Capture the "s" in static to try testing if the
@@ -76,7 +76,7 @@ cppcoro::generator<const Export&> get(std::string_view content) {
   re::Captures captures;
   re::Capture NSCapture;
   std::stack<NSorUnion> stack;
-  stack.emplace(0, 0, 0, content.size());
+  stack.emplace(lastImportEnd, lastImportEnd, 0, content.size());
   NSorUnion self;
   std::string_view toMatch;
 
@@ -247,10 +247,10 @@ const Export& exp1) {
 
 } // namespace
 
-void addExports(std::string& content, const Opts& opts) {
+void addExports(std::string& content, size_t lastImportEnd, const Opts& opts) {
   logIfVerbose("Acquiring exports...");
   std::stack<Export> exports;
-  for(const Export& exp1 : unionAndNSExport::get(content)) {
+  for(const Export& exp1 : unionAndNSExport::get(content, lastImportEnd)) {
     for(const Export& exp : staticSymbolExport::get(content, exp1)) {
       exports.push(exp);
     }

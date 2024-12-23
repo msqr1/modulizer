@@ -17,7 +17,7 @@
 - A CLI tool
 - Input & options:
     - CLI only (flags, one-time settings): 
-        -  ```-c --config``` - Path to configuration file (```.toml```), default to ```modulizer.toml```
+        -  ```-c --config``` - Path to TOML configuration file (```.toml```), default to ```modulizer.toml```
         -  ```-h --help``` - Print help and exit
         -  ```-v --version``` - Print version and exit
     - ```.toml```-only (modularization settings):
@@ -25,21 +25,27 @@
         - ```outDir``` - Output directory (required)
         - ```verbose``` - Enable verbose output (debugging)
         - ```duplicateIncludeMode``` - Set the duplicate include prevention mode used by the project. (```0```: include guards, ```1```: ```#pragma once```)
-        - ```headerExtRegex``` - Header file extension regex
-        - ```sourceExtRegex``` - Source file extension regex
+        - ```includePaths``` - Include paths searched when converting include to import
+        - ```hdrExtRegex``` - Header file extension regex
+        - ```srcExtRegex``` - Source file extension regex
         - ```moduleInterfaceExt``` - Module interface unit file extension
         - ```openExport``` - Syntax for opening an export section
         - ```closeExport``` - Syntax for closing an export section
     - Default values for ```.toml```-only settings:
         - verbose: ```false``` [boolean]
         - duplicateIncludeMode: ```0``` [int]
-        - headerExtRegex: ```"\.h(pp|xx)?"``` [string]
-        - sourceExtRegex: ```"\.c(pp|c|xx)"``` [string]
+        - includePaths: ```[]``` [string array]
+        - hdrExtRegex: ```"\.h(pp|xx)?"``` [string]
+        - srcExtRegex: ```"\.c(pp|c|xx)"``` [string]
         - moduleInterfaceExt: ```".cppm"``` [string]
         - openExport: ```export {\n``` [string]
         - closeExport: ```}\n``` [string]
-    - Config file syntax follows [TOML](https://toml.io/en)
-    
+    - Behavior of include path searching:
+| Type | Action |
+|-|-|
+| Quoted        | 1. Relative to directory of the current file<br> 2. Relative to the include paths listed |
+| Angle-bracket | 1. Relative to the include paths listed                                                  |
+
 ## Design goals
 - **Automation**: Refactor code into named modules automatically
 - **Validity**: Generate correct C++20 code
@@ -53,5 +59,5 @@
 ## Maybe in the future (post MVP)
 - Merging source and header
 - Dependency analysis
-- Parallel execution
 - Build system integration
+ 

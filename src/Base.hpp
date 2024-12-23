@@ -13,7 +13,8 @@ size_t rtnSize(char* _, size_t size);
 template <typename... T> struct exitWithErr {
 
   // Overload for direct callers, source location is implied
-  exitWithErr(fmt::format_string<T...> fmt, T&&... args, const std::source_location& loc = std::source_location::current()) {
+  [[noreturn]] exitWithErr(fmt::format_string<T...> fmt, T&&... args, 
+  const std::source_location& loc = std::source_location::current()) {
     exitWithErr(loc, fmt, std::forward<T>(args)...);
   }
   
@@ -22,7 +23,7 @@ template <typename... T> struct exitWithErr {
   [[noreturn]] exitWithErr(const std::source_location& loc, fmt::format_string<T...> fmt
     , T&&... args) {
     std::string_view filename{loc.file_name()};
-    filename.remove_prefix(filename.find_last_of(pathSeparator));
+    filename.remove_prefix(filename.find_last_of(pathSeparator) + 1);
     fmt::print("Exception thrown at {}({}:{}): ", filename, loc.line(), loc.column());
     fmt::println(fmt, std::forward<T>(args)...);
     throw 1;

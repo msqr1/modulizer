@@ -1,7 +1,8 @@
 #pragma once
-#include <iosfwd> // For std::string
+#include <cstddef> // For size_t
 
 struct Opts;
 struct File;
 
-void modularize(File& file, const Opts& opts);
+// Return the end of the last import statement
+size_t modularize(File& file, const Opts& opts);
