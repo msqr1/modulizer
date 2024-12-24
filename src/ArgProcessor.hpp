@@ -12,7 +12,7 @@ struct Opts {
   std::string moduleInterfaceExt;
   std::string openExport;
   std::string closeExport;
-  std::vector<std::string> includePaths;
+  std::vector<std::filesystem::path> includePaths;
 };
 
 Opts getOptsOrExit(int argc, const char* const* argv, bool& verbose);

@@ -40,10 +40,10 @@
         - moduleInterfaceExt: ```".cppm"``` [string]
         - openExport: ```export {\n``` [string]
         - closeExport: ```}\n``` [string]
-    - Behavior of include path searching:
+    - Behavior of include path searching (similar concept to specifying ```-I```):
 | Type | Action |
 |-|-|
-| Quoted        | 1. Relative to directory of the current file<br> 2. Relative to the include paths listed |
+| Quoted        | 1. Relative to directory of the current file<br>2. Same as angle-bracket |
 | Angle-bracket | 1. Relative to the include paths listed                                                  |
 
 ## Design goals
