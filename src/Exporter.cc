@@ -9,17 +9,10 @@
 
 namespace {
 
-// PCRE2 for non-matching capture groups, and
-// std::string::find* for not found return a -1 size_t (std::string::npos)
-constexpr size_t notFound{static_cast<size_t>(-1)};
 constexpr std::string_view whitespaces{" \n\t"};
 
-// Generic template for matching braces, parentheses, ...
-// Set pos to ONE PAST the matching brace (just the nature of the algorithm)
 void balanceBrace(std::string_view str, size_t& pos) {
   int nest{1};
-
-  // 1st iteration always run, use do-while
   do {
     switch(str[pos]) {
     case '{':
@@ -79,8 +72,6 @@ cppcoro::generator<const Export&> get(std::string_view content, size_t lastImpor
   stack.emplace(lastImportEnd, lastImportEnd, 0, content.size());
   NSorUnion self;
   std::string_view toMatch;
-
-  // 1st iteration always run, use do-while
   do {
     NSorUnion& parent = stack.top();
     toMatch = content.substr(0, parent.end);
@@ -96,8 +87,8 @@ cppcoro::generator<const Export&> get(std::string_view content, size_t lastImpor
       if(isUnion) {
         size_t declSemicolon{toMatch.find(';', self.end)};
 
-        // Check if "static" is in the front (seeing if the captured "s" is there) or if
-        // "static" is between the semicolon and the closing brace
+        // Check if "static" is in the front (seeing if the captured "s" is there) or 
+        // after the union's end
         isStaticUnion = captures[1].start != notFound || 
         toMatch.substr(self.end, declSemicolon - self.end).contains("static");
         self.end = declSemicolon + 1;
@@ -121,13 +112,10 @@ cppcoro::generator<const Export&> get(std::string_view content, size_t lastImpor
         // the brace itself.
         self.end--;
 
-        // Named namespace, if we only do !isUnnamedNS, a union will also not 
-        // count as a namespace, so isUnnamedNS will be false and this runs
+        // Named namespace
         if(!(isUnion || isUnnamedNS)) stack.emplace(self);
       }
     } 
-
-    // No match (no more to export)
     else {
       if(!onlyWhitespace(toMatch, parent.start, parent.end)) {
         co_yield rtn.set(parent.start, parent.end);
@@ -190,58 +178,48 @@ cppcoro::generator<const Export&> get(std::string_view content,
 const Export& exp1) {
   Export rtn;
   content.remove_suffix(content.size() - exp1.end);
-  std::string_view toMatch;
-  
   std::optional<re::Captures> maybeCaptures;
   std::optional<size_t> maybeTemplate;
   size_t processed{exp1.start};
   size_t lastExportEnd{exp1.start};
+  auto exportStatics = [&](std::string_view subject) -> 
+    cppcoro::generator<const Export&> {
+    while((maybeCaptures = pat.match(subject, processed))) {
+      auto [start, end]{(*maybeCaptures)[0]};
+      char endIsBrace{subject[end - 1] == '{'};
+      bool isFn{endIsBrace && subject.substr(start).rfind(')', end) != notFound};
+      if((maybeTemplate = getTemplate(subject, start))) start = *maybeTemplate;
+      if(!onlyWhitespace(subject, lastExportEnd, start)) {
+        co_yield rtn.set(lastExportEnd, start);
+      }
+      if(endIsBrace) {
+        balanceBrace(subject, end);
+        if(!isFn) end = subject.find(';', end) + 1;
+      }
+      lastExportEnd = processed = end;
+    }
+  };
   {
+    std::string_view toMatch;
     re::Capture classDecl; 
     while((maybeCaptures = typePat.match(content, processed))) {
       classDecl = (*maybeCaptures)[0];
       toMatch = content.substr(0, classDecl.start);
-      while((maybeCaptures = pat.match(toMatch, processed))) {
-        auto [start, end]{(*maybeCaptures)[0]};
-        char endIsBrace{toMatch[end - 1] == '{'};
-        bool isFn{endIsBrace && toMatch.substr(start).rfind(')', end) != notFound};
-        if((maybeTemplate = getTemplate(toMatch, start))) start = *maybeTemplate;
-        if(!onlyWhitespace(toMatch, lastExportEnd, start)) {
-          co_yield rtn.set(lastExportEnd, start);
-        }
-        if(endIsBrace) {
-          balanceBrace(toMatch, end);
-
-          // A brace-initialized variable, find its ending semicolon
-          if(!isFn) end = toMatch.find(';', end) + 1;
-        }
-        lastExportEnd = processed = end;
+      for(const Export& exp : exportStatics(toMatch)) {
+        co_yield exp;
       }
       processed = classDecl.end;
       balanceBrace(content, processed);
       processed = content.find(';', processed) + 1;
     }
   }
-  while((maybeCaptures = pat.match(content, processed))) {
-    auto [start, end]{(*maybeCaptures)[0]};
-    char endIsBrace{content[end - 1] == '{'};
-    bool isFn{endIsBrace && content.substr(start).rfind(')', end) != notFound};
-    if((maybeTemplate = getTemplate(content, start))) start = *maybeTemplate;
-    if(!onlyWhitespace(content, lastExportEnd, start)) {
-      co_yield rtn.set(lastExportEnd, start);
-    }
-    if(endIsBrace) {
-      balanceBrace(content, end);
-
-      // A brace-initialized variable, find its ending semicolon
-      if(!isFn) end = content.find(';', end) + 1;
-    }
-    lastExportEnd = processed = end;
+  for(const Export& exp : exportStatics(content)) {
+    co_yield exp;
   }
   if(!onlyWhitespace(content, processed, exp1.end)) {
     co_yield rtn.set(processed, exp1.end);
   }
-} 
+}
 
 } // namespace staticSymbolExport
 
@@ -249,17 +227,19 @@ const Export& exp1) {
 
 void addExports(std::string& content, size_t lastImportEnd, const Opts& opts) {
   logIfVerbose("Acquiring exports...");
+  
+  // We don't insert the exports while scanning because that will severely
+  // increase the complexity of calculating offset (notice how these are nested)
+  // Besides, Exports are just number pairs, easily stored
   std::stack<Export> exports;
   for(const Export& exp1 : unionAndNSExport::get(content, lastImportEnd)) {
     for(const Export& exp : staticSymbolExport::get(content, exp1)) {
       exports.push(exp);
     }
   }
-
-  // 1st iteration always run, use do-while
   logIfVerbose("Inserting exports...");
   do {
-    auto [start, end]{exports.top()};
+    const auto [start, end]{exports.top()};
     content.insert(end, opts.closeExport).insert(start, opts.openExport);
     exports.pop();
   } while(!exports.empty());

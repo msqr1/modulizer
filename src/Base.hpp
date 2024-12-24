@@ -4,9 +4,12 @@
 #include <filesystem>
 
 extern bool verbose;
-constexpr char pathSeparator{std::filesystem::path::preferred_separator};
 
 size_t rtnSize(char* _, size_t size);
+
+// PCRE2 for non-matching capture groups, and
+// std::string(_view)::find* for not found return a -1 size_t (std::string::npos)
+constexpr size_t notFound{static_cast<size_t>(-1)};
 
 [[noreturn]] void exitOK();
 
@@ -22,9 +25,8 @@ template <typename... T> struct exitWithErr {
   // Custom source location is here to give correct error location
   [[noreturn]] exitWithErr(const std::source_location& loc, fmt::format_string<T...> fmt
     , T&&... args) {
-    std::string_view filename{loc.file_name()};
-    filename.remove_prefix(filename.find_last_of(pathSeparator) + 1);
-    fmt::print("Exception thrown at {}({}:{}): ", filename, loc.line(), loc.column());
+    std::filesystem::path p{loc.file_name()};
+    fmt::print("Exception thrown at {}({}:{}): ", p.filename().native(), loc.line(), loc.column());
     fmt::println(fmt, std::forward<T>(args)...);
     throw 1;
   }  
